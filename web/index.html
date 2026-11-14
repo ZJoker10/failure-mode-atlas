@@ -1,0 +1,2103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Failure-Mode Atlas — Robotics 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0C2744; --muted:#3E5D80;
+  --lime:#5FEE13; --orange:#FF6A2C; --blue:#2E6BFF; --magenta:#F404FF; --violet:#6209BA;
+  --panel:rgba(255,255,255,.40); --edge:rgba(255,255,255,.62);
+  --r:28px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:"Plus Jakarta Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(1100px 700px at 88% -10%, rgba(94,238,19,.22), transparent 60%),
+    radial-gradient(900px 600px at -10% 20%, rgba(244,4,255,.14), transparent 55%),
+    linear-gradient(158deg,#44B4EC 0%,#7FD3F1 45%,#BFFCFC 100%);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+
+/* ---------- chrome ---------- */
+.top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:14px;min-width:280px}
+.mark{width:46px;height:46px;border-radius:15px;background:var(--ink);color:#BFFCFC;
+  display:grid;place-items:center;font-weight:800;font-size:19px;letter-spacing:-.5px;flex:none}
+.brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.35px;line-height:1.15}
+.brand p{margin:3px 0 0;font-size:12.5px;color:var(--muted);font-weight:500}
+nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+nav a{font-size:13px;font-weight:600;padding:9px 15px;border-radius:999px;text-decoration:none;
+  color:var(--ink);border:1px solid transparent;transition:.16s}
+nav a:hover{background:rgba(255,255,255,.35)}
+nav a.on{background:var(--ink);color:#fff;box-shadow:0 8px 20px rgba(12,39,68,.22)}
+
+/* ---------- panels ---------- */
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
+  backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+  box-shadow:0 20px 50px rgba(12,39,68,.10);padding:24px}
+.panel+.panel{margin-top:18px}
+.grid{display:grid;gap:18px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g2{grid-template-columns:1.45fr 1fr}
+@media(max-width:900px){.g4{grid-template-columns:repeat(2,1fr)}.g2{grid-template-columns:1fr}}
+
+/* ---------- type ---------- */
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+h2{font-size:26px;margin:6px 0 10px;letter-spacing:-.6px;line-height:1.15}
+h3{font-size:15px;margin:0 0 10px;letter-spacing:-.2px}
+p{margin:0 0 10px;line-height:1.55;font-size:14px}
+.small{font-size:12.5px;color:var(--muted);line-height:1.5}
+.mono{font-variant-numeric:tabular-nums}
+
+/* ---------- stat cards ---------- */
+.stat{background:rgba(255,255,255,.5);border:1px solid var(--edge);border-radius:22px;padding:16px 18px}
+.stat .n{font-size:31px;font-weight:800;letter-spacing:-1.2px;line-height:1}
+.stat .n small{font-size:14px;font-weight:600;color:var(--muted);letter-spacing:0}
+.stat .k{font-size:12px;color:var(--muted);font-weight:600;margin-top:6px}
+
+/* ---------- controls ---------- */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 18px}
+input[type=search]{font:inherit;font-size:13.5px;padding:11px 16px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.55);color:var(--ink);
+  min-width:250px;outline:none}
+input[type=search]:focus{background:#fff;border-color:var(--blue);box-shadow:0 0 0 4px rgba(46,107,255,.14)}
+.chip{font:inherit;font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.8);background:rgba(255,255,255,.38);color:var(--ink);transition:.15s}
+.chip:hover{background:rgba(255,255,255,.7)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ---------- rows ---------- */
+.rows{display:flex;flex-direction:column;gap:9px}
+.row{display:grid;grid-template-columns:46px 1fr 132px 104px;gap:14px;align-items:center;
+  padding:15px 18px;border-radius:20px;background:rgba(255,255,255,.34);
+  border:1px solid rgba(255,255,255,.55);cursor:pointer;transition:.16s;text-align:left}
+.row:hover{background:rgba(255,255,255,.66);transform:translateY(-1px);
+  box-shadow:0 14px 30px rgba(12,39,68,.12)}
+.row .rank{font-size:13px;font-weight:800;color:var(--violet);font-variant-numeric:tabular-nums}
+.row .t{font-size:14.5px;font-weight:700;letter-spacing:-.2px;line-height:1.3}
+.row .t span{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:4px;
+  letter-spacing:.02em}
+@media(max-width:820px){
+  .row{grid-template-columns:38px 1fr;grid-template-areas:"r t" "m m"}
+  .row .rank{grid-area:r}.row .t{grid-area:t}.row .meter{grid-area:m}
+  .row .qty{display:none}
+}
+
+/* ---------- marks meter: a quantity against 30 ---------- */
+.meter{display:flex;align-items:center;gap:9px}
+.bar{position:relative;height:9px;flex:1;border-radius:99px;background:rgba(12,39,68,.12);overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:linear-gradient(90deg,var(--blue),var(--violet))}
+.bar.strong i{background:linear-gradient(90deg,var(--orange),var(--magenta))}
+.qty{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.qty small{font-weight:600;color:var(--muted);font-size:11px}
+
+/* ---------- tags ---------- */
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border-radius:99px;
+  background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.9)}
+.dot{width:7px;height:7px;border-radius:99px;display:inline-block;flex:none}
+.doc{background:rgba(95,238,19,.30);border-color:rgba(95,238,19,.75)}
+.rec{background:rgba(255,106,44,.24);border-color:rgba(255,106,44,.7)}
+.thin{background:rgba(244,4,255,.16);border-color:rgba(244,4,255,.5)}
+
+/* ---------- detail ---------- */
+.kv{display:grid;grid-template-columns:150px 1fr;gap:8px 18px;font-size:13.5px;line-height:1.5}
+.kv dt{color:var(--muted);font-weight:600}
+.kv dd{margin:0}
+.quote{border-left:3px solid var(--lime);padding:2px 0 2px 16px;margin:8px 0 0;
+  font-size:14px;line-height:1.6;letter-spacing:-.1px}
+.quote.lecture{border-left-color:var(--blue)}
+.evcard{background:rgba(255,255,255,.5);border:1px solid var(--edge);border-radius:20px;padding:16px 18px}
+.evcard+.evcard{margin-top:12px}
+.evhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.evhead b{font-size:13px}
+.evhead code{font-size:11.5px;color:var(--muted);background:rgba(12,39,68,.06);padding:2px 7px;border-radius:6px}
+.btn{font:inherit;font-size:12.5px;font-weight:700;padding:9px 14px;border-radius:99px;border:0;
+  background:var(--ink);color:#fff;cursor:pointer;text-decoration:none;display:inline-block;transition:.15s}
+.btn:hover{background:var(--violet)}
+.btn.ghost{background:rgba(255,255,255,.55);color:var(--ink);border:1px solid rgba(255,255,255,.9)}
+.btn.ghost:hover{background:#fff}
+
+/* ---------- evidence viewer ---------- */
+.page{font-size:13.5px;line-height:1.85;white-space:pre-wrap;word-break:break-word;
+  background:rgba(255,255,255,.62);border-radius:20px;padding:22px 24px;
+  border:1px solid rgba(255,255,255,.9);max-height:60vh;overflow:auto}
+.page mark{background:linear-gradient(180deg,rgba(95,238,19,.55),rgba(95,238,19,.28));
+  color:var(--ink);font-weight:700;border-radius:4px;padding:1px 2px;box-decoration-break:clone}
+.page .lead{color:var(--muted)}
+.pglabel{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.cite{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cite b{color:var(--ink)}
+
+/* ---------- coverage ---------- */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid rgba(12,39,68,.10)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}
+td.n{font-variant-numeric:tabular-nums;font-weight:700;width:88px}
+.bad{color:#B3200B;font-weight:700}
+.good{color:#1F7A00;font-weight:700}
+ul{margin:6px 0 0;padding-left:20px;font-size:13.5px;line-height:1.6}
+li{margin-bottom:5px}
+.note{border-left:3px solid var(--orange);padding:2px 0 2px 14px;font-size:13px;color:var(--ink);
+  background:rgba(255,106,44,.08);border-radius:0 12px 12px 0;padding:10px 14px;margin:12px 0}
+.kbd{font-size:11.5px;font-weight:700;background:rgba(12,39,68,.08);padding:2px 7px;border-radius:6px}
+footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="mark">FM</div>
+      <div>
+        <h1>Failure-Mode Atlas</h1>
+        <p>Robotics 1 · Sapienza · Prof. A. De Luca</p>
+      </div>
+    </div>
+    <nav id="nav">
+      <a href="#/" data-nav="atlas">Atlas</a>
+      <a href="#/coverage" data-nav="coverage">Coverage</a>
+    </nav>
+  </div>
+  <main id="app"></main>
+  <footer>
+    Every quote on this page is verified to occur verbatim on the cited page by the build's
+    grounding check. Marks are an equal-split model, not a measured quantity.
+  </footer>
+</div>
+
+<script id="d-atlas" type="application/json">[
+ {
+  "id": "FM-DT-11-trajectory",
+  "title": "Minimum time under bounds — Trajectory planning (joint space)",
+  "rule_id": "DT-11",
+  "trigger": "Minimum-time motion subject to acceleration or velocity bounds.",
+  "wrong_turn": "Times the motion by picking a comfortable duration, or uses a symmetric profile that satisfies the bound on one joint only.",
+  "root_misconception": "A feasible trajectory is a minimal one if it looks tight.",
+  "concepts": [
+   "trajectory"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Exercise 2, p. 2",
+    "quote": "polynomial joint trajectory q(t) that realizes a coordinated motion in minimum time T of two robot joints from q(0) = (0, −π/2) to q(T ) = (π/4, π/4) [rad], with boundary conditions q̇(0) = q̈(0)"
+   },
+   "lecture": {
+    "doc": "13_TrajectoryPlanning",
+    "ref": "p. 29",
+    "quote": "Trajectory planning in joint space"
+   }
+  },
+  "probe": "Which joint saturates its bound first, and for how long?",
+  "correction": "Each joint has its own minimal time under its own bound. The coordinated time is the maximum, then the slower joint is scaled to fill it.",
+  "marks_at_risk": 7.74,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 30,
+  "exams_affected": 18,
+  "marks_per_exam_all": 1.44,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "polynomial joint trajectory q(t) that realizes a coordinated motion in minimum time T of two robot joints from q(0) = (0, −π/2) to q(T ) = (π/4, π/4) [rad], with boundary conditions q̇(0) = q̈(0)"
+   },
+   {
+    "doc": "Robotics1_12.01.11",
+    "ref": "Robotics1_12.01.11 / Exercise 2 / 3",
+    "page": 1,
+    "quote": "the obtained minimum time trajectory unique for this problem? Motivate the answer. [150 minutes; open books] Bonus Exercise (30 additional minutes available) Write a Matlab program that plots"
+   },
+   {
+    "doc": "Robotics1_15.02.06",
+    "ref": "Robotics1_15.02.06 / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "trajectory p(t) from A to B that performs the transfer in minimum time T under the maximum velocity and acceleration constraints kṗ(t)k ≤ Vmax , kp̈(t)k ≤ Amax , t ∈ [0, T ], and the"
+   },
+   {
+    "doc": "Robotics1_15.02.06_long",
+    "ref": "Robotics1_15.02.06_long / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "trajectory p(t) from A to B that performs the transfer in minimum time T under the maximum velocity and acceleration constraints kṗ(t)k ≤ Vmax , kp̈(t)k ≤ Amax , t ∈ [0, T ], and the"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-04-direct_kinematics",
+  "title": "Symbolic form demanded — Direct kinematics",
+  "rule_id": "DT-04",
+  "trigger": "The task requires a symbolic expression, not a number.",
+  "wrong_turn": "Substitutes the numeric link lengths at the first opportunity, then cannot simplify, factor or find the singular set later.",
+  "root_misconception": "Numbers make it concrete, so numbering early is safer.",
+  "concepts": [
+   "direct_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_18.01.11",
+    "ref": "Exercise 1, p. 1",
+    "quote": "the Denavit-Hartenberg (DH) convention and complete the as- sociated symbolic table of parameters, specifying also the signs of the non-zero constant parameters. Draw the frames and fill in the table directly on the extra sheet"
+   },
+   "lecture": {
+    "doc": "09_DirectKinematics",
+    "ref": "p. 8",
+    "quote": "Direct kinematics of 2R planar robot just using"
+   }
+  },
+  "probe": "Write k(q) with the link lengths still as symbols; where does l2 appear twice?",
+  "correction": "Carry symbols to the end. Numbers are a final check, never an intermediate step, because the structure is what is being marked.",
+  "marks_at_risk": 3.67,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 47,
+  "exams_affected": 38,
+  "marks_per_exam_all": 1.44,
+  "occurrences": [
+   {
+    "doc": "Robotics1_18.01.11",
+    "ref": "Robotics1_18.01.11 / Exercise 1 / 1",
+    "page": 1,
+    "quote": "the Denavit-Hartenberg (DH) convention and complete the as- sociated symbolic table of parameters, specifying also the signs of the non-zero constant parameters. Draw the frames and fill in the table directly on the extra sheet"
+   },
+   {
+    "doc": "Robotics1_19.02.05",
+    "ref": "Robotics1_19.02.05 / Exercise 1 / a",
+    "page": 1,
+    "quote": "ciated table of parameters, specifying the signs of all constant symbolic parameters. Keep base frame (frame 0) and last frame (the end-effector frame 4) as defined in Fig. 1 (these frames satisfy already the DH requirements!)."
+   },
+   {
+    "doc": "Robotics1_23.01.23",
+    "ref": "Robotics1_23.01.23 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "Provide then the symbolic expression of w pW (q) in explicit form. 1 TIAGo - Robot Workspace versatility: https://youtu.be/6BwRqwD066g (1’08”); TIAGo - Gravity compensation: https://youtu.be/EjIggPKy0T0 (1’23”). 1"
+   },
+   {
+    "doc": "Robotics1_21.10.19",
+    "ref": "Robotics1_21.10.19 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "For the robot in Fig. 1, using the associated symbolic DH parameters, determine a smooth and coordinated rest-to-rest joint trajectory that will move in T seconds the robot gripper from the initial position pi ="
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-10-singularity",
+  "title": "Rank and null space demanded — Singular configurations",
+  "rule_id": "DT-10",
+  "trigger": "The task asks for rank and a null-space basis, not just 'J is singular'.",
+  "wrong_turn": "Computes det(J) = 0, declares a singularity, and moves on without producing rank or any basis.",
+  "root_misconception": "Singular means the determinant vanished; the structure of what collapsed is extra.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_18.02.05",
+    "ref": "Exercise 3, p. 1",
+    "quote": "next a configuration q 0 where J L is full rank, and substitute all the available numerical data in this matrix. Sketch this configuration and compute then a non-zero joint velocity q̇ 0 ∈ R4 such"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "If det(J) = 0, what is rank(J) here, and name one vector J sends to zero.",
+  "correction": "Compute rank explicitly and exhibit a null vector. The null space is the self-motion — that is the physically meaningful output.",
+  "marks_at_risk": 3.69,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 25,
+  "exams_affected": 20,
+  "marks_per_exam_all": 0.76,
+  "occurrences": [
+   {
+    "doc": "Robotics1_18.02.05",
+    "ref": "Robotics1_18.02.05 / Exercise 3 / 3",
+    "page": 1,
+    "quote": "next a configuration q 0 where J L is full rank, and substitute all the available numerical data in this matrix. Sketch this configuration and compute then a non-zero joint velocity q̇ 0 ∈ R4 such"
+   },
+   {
+    "doc": "Robotics1_20.09.11",
+    "ref": "Robotics1_20.09.11 / Exercise 4 / clause 1",
+    "page": 2,
+    "quote": "Find all (singular) configurations q \u0005 where the rank of the Jacobian J (q) is equal to 2 and all configurations q ∗ where the rank is equal to 1."
+   },
+   {
+    "doc": "Robotics1_22.01.11",
+    "ref": "Robotics1_22.01.11 / Exercise 3 / iii",
+    "page": 2,
+    "quote": "singular configuration q s , determine a basis for the null space N {J t (q s )} and a basis for the range space R{J t (q s )}. Both bases should"
+   },
+   {
+    "doc": "Robotics1_22.06.10",
+    "ref": "Robotics1_22.06.10 / Exercise 1 / 5",
+    "page": 1,
+    "quote": "singularity q s where rank J (q s ) = 1, find an admissible end-effector velocity v s ∈ R3 and a joint velocity q̇ s ∈ R3 such that"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-09-trajectory",
+  "title": "Boundary conditions pinned — Trajectory planning (joint space)",
+  "rule_id": "DT-09",
+  "trigger": "Velocity and acceleration are pinned at both ends.",
+  "wrong_turn": "Fits position only and produces a trajectory with a velocity jump at the endpoints, or forgets that a cubic cannot zero acceleration too.",
+  "root_misconception": "Boundary conditions on position are the ones that matter; velocity follows along.",
+  "concepts": [
+   "trajectory"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_15.02.06",
+    "ref": "Exercise 2, p. 2",
+    "quote": "with trapezoidal speed profile so as to obtain a rest-to-rest circular trajectory p(t) from A to B that performs the transfer in minimum time T under the maximum velocity and acceleration constraints kṗ(t)k ≤ Vmax"
+   },
+   "lecture": {
+    "doc": "13_TrajectoryPlanning",
+    "ref": "p. 29",
+    "quote": "Trajectory planning in joint space"
+   }
+  },
+  "probe": "How many boundary conditions did you impose, and how many free coefficients does your polynomial have?",
+  "correction": "Count degrees of freedom against conditions before choosing the degree. Cubic zeroes velocity; quintic is needed to zero acceleration too.",
+  "marks_at_risk": 4.99,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 17,
+  "exams_affected": 16,
+  "marks_per_exam_all": 0.82,
+  "occurrences": [
+   {
+    "doc": "Robotics1_15.02.06",
+    "ref": "Robotics1_15.02.06 / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "with trapezoidal speed profile so as to obtain a rest-to-rest circular trajectory p(t) from A to B that performs the transfer in minimum time T under the maximum velocity and acceleration constraints kṗ(t)k ≤ Vmax"
+   },
+   {
+    "doc": "Robotics1_15.02.06_long",
+    "ref": "Robotics1_15.02.06_long / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "with trapezoidal speed profile so as to obtain a rest-to-rest circular trajectory p(t) from A to B that performs the transfer in minimum time T under the maximum velocity and acceleration constraints kṗ(t)k ≤ Vmax"
+   },
+   {
+    "doc": "Robotics1_21.10.19",
+    "ref": "Robotics1_21.10.19 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "the associated symbolic DH parameters, determine a smooth and coordinated rest-to-rest joint trajectory that will move in T seconds the robot gripper from the initial position pi = (a1 + a3 , 0, 0) to the"
+   },
+   {
+    "doc": "Robotics1_21.09.10",
+    "ref": "Robotics1_21.09.10 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "generic value L for link lengths), determine a smooth, coordinated rest-to-rest joint trajectory q d (t) that will move the robot in T seconds from the initial value r i = (2L, 0, π/4) of the"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-08-direct_kinematics",
+  "title": "Justification demanded — Direct kinematics",
+  "rule_id": "DT-08",
+  "trigger": "A 'show that' / 'justify' imperative whose conclusion is already given.",
+  "wrong_turn": "Substitutes a number, sees it works, and writes 'verified'. Or restates the claim in different words.",
+  "root_misconception": "Matching the stated answer is the same as establishing it.",
+  "concepts": [
+   "direct_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_25.06.11",
+    "ref": "Exercise 2, p. 1",
+    "quote": "joints!] Evaluate numerically the direct kinematics in this configuration and verify the correctness of the obtained end-effector position and orientation with respect to the base frame RF0 . Figure 1: The ABB CBR 15000 collaborative robot."
+   },
+   "lecture": {
+    "doc": "09_DirectKinematics",
+    "ref": "p. 8",
+    "quote": "Direct kinematics of 2R planar robot just using"
+   }
+  },
+  "probe": "Show me the step where the conclusion follows — what would break if the claim were false?",
+  "correction": "Prove the general case symbolically; use the numeric instance only as a check. 'Show that' is a proof obligation, not a spot-check.",
+  "marks_at_risk": 4.54,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 15,
+  "exams_affected": 12,
+  "marks_per_exam_all": 0.56,
+  "occurrences": [
+   {
+    "doc": "Robotics1_25.06.11",
+    "ref": "Robotics1_25.06.11 / Exercise 2 / 4",
+    "page": 1,
+    "quote": "joints!] Evaluate numerically the direct kinematics in this configuration and verify the correctness of the obtained end-effector position and orientation with respect to the base frame RF0 . Figure 1: The ABB CBR 15000 collaborative robot."
+   },
+   {
+    "doc": "Robotics1_21.06.11",
+    "ref": "Robotics1_21.06.11 / Exercise 2 / b",
+    "page": 1,
+    "quote": "torques and a force) needed for static balance. Comments that justify intuitively some of the obtained results are welcome! 1 Use these coordinates in your developments. Note that q and q are not DH variables. 1"
+   },
+   {
+    "doc": "Robotics1_20.01.07",
+    "ref": "Robotics1_20.01.07 / Exercise 3 / d",
+    "page": 2,
+    "quote": "that the third link has length L = 1 [m]. Show that the parametrized Cartesian task implies also a unique parametrized path in the robot joint space, and provide the analytic expression of q = q(s)."
+   },
+   {
+    "doc": "Robotics1_19.01.11",
+    "ref": "Robotics1_19.01.11 / Exercise 3 / b",
+    "page": 2,
+    "quote": "end-effector acceleration, kp̈k ≤ Ac = 10 m/s2 . (3) Verify whether the previous solution q a∗ (t) satisfies the bound (3) or not. If not, propose a modified joint trajectory q b∗ (t) such that"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-10-jacobian",
+  "title": "Rank and null space demanded — Differential kinematics / Jacobian",
+  "rule_id": "DT-10",
+  "trigger": "The task asks for rank and a null-space basis, not just 'J is singular'.",
+  "wrong_turn": "Computes det(J) = 0, declares a singularity, and moves on without producing rank or any basis.",
+  "root_misconception": "Singular means the determinant vanished; the structure of what collapsed is extra.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_18.02.05",
+    "ref": "Exercise 3, p. 1",
+    "quote": "next a configuration q 0 where J L is full rank, and substitute all the available numerical data in this matrix. Sketch this configuration and compute then a non-zero joint velocity q̇ 0 ∈ R4 such"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "If det(J) = 0, what is rank(J) here, and name one vector J sends to zero.",
+  "correction": "Compute rank explicitly and exhibit a null vector. The null space is the self-motion — that is the physically meaningful output.",
+  "marks_at_risk": 3.39,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 18,
+  "exams_affected": 17,
+  "marks_per_exam_all": 0.59,
+  "occurrences": [
+   {
+    "doc": "Robotics1_18.02.05",
+    "ref": "Robotics1_18.02.05 / Exercise 3 / 3",
+    "page": 1,
+    "quote": "next a configuration q 0 where J L is full rank, and substitute all the available numerical data in this matrix. Sketch this configuration and compute then a non-zero joint velocity q̇ 0 ∈ R4 such"
+   },
+   {
+    "doc": "Robotics1_20.09.11",
+    "ref": "Robotics1_20.09.11 / Exercise 4 / clause 1",
+    "page": 2,
+    "quote": "Find all (singular) configurations q \u0005 where the rank of the Jacobian J (q) is equal to 2 and all configurations q ∗ where the rank is equal to 1."
+   },
+   {
+    "doc": "Robotics1_25.01.13_with_midterm_text",
+    "ref": "Robotics1_25.01.13_with_midterm_text / Exercise 1 / b",
+    "page": 1,
+    "quote": "When the robot is in a configuration q s with all strictly positive joint values and such that the matrix J p (q s ) loses rank:"
+   },
+   {
+    "doc": "Robotics1_17.07.11",
+    "ref": "Robotics1_17.07.11 / Exercise 1 / 3",
+    "page": 1,
+    "quote": "Derive the explicit expression of the 6 × 5 geometric Jacobian J (q) and analyze if and when this matrix loses full rank."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-06-inverse_kinematics",
+  "title": "Closed form required — Inverse kinematics",
+  "rule_id": "DT-06",
+  "trigger": "The task asks for an analytic inverse, not an iterative one.",
+  "wrong_turn": "Sets up Newton's iteration and stops when the residual is small, delivering a point rather than a solution set.",
+  "root_misconception": "A sufficiently good numeric answer is the same object as the closed form.",
+  "concepts": [
+   "inverse_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_Midterm_2025-26_25.11.21",
+    "ref": "Exercise 5b, p. 2",
+    "quote": "For a desired r d , solve in closed form the inverse kinematics problem of this robot, assuming that joints have unlimited range. In doing so, identify the conditions for the existence and the"
+   },
+   "lecture": {
+    "doc": "10_InverseKinematics",
+    "ref": "p. 3",
+    "quote": "Inverse kinematics problem"
+   }
+  },
+  "probe": "How many distinct q map to your p_d, and which equation did you use to separate them?",
+  "correction": "Isolate q1 from the position equation, then solve the remaining planar sub-problem. The count of branches is part of the answer.",
+  "marks_at_risk": 2.81,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 21,
+  "exams_affected": 19,
+  "marks_per_exam_all": 0.55,
+  "occurrences": [
+   {
+    "doc": "Robotics1_Midterm_2025-26_25.11.21",
+    "ref": "Robotics1_Midterm_2025-26_25.11.21 / Exercise 5 / b",
+    "page": 2,
+    "quote": "For a desired r d , solve in closed form the inverse kinematics problem of this robot, assuming that joints have unlimited range. In doing so, identify the conditions for the existence and the"
+   },
+   {
+    "doc": "Robotics1_24.11.07_text",
+    "ref": "Robotics1_24.11.07_text / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "variables in Exercise 1, solve the inverse kinematics problem in closed form for the PPR planar robot in terms of\b the components of the end-effector task vector r = (w pe,x , w pe,y , w"
+   },
+   {
+    "doc": "Robotics1_Midterm_2026-27_26.11.13_text",
+    "ref": "Robotics1_Midterm_2026-27_26.11.13_text / Exercise 3 / 3",
+    "page": 1,
+    "quote": "last DH frame, find all inverse kinematics (IK) solutions in closed form. Characterize the regular case, singular cases (if any), and when no solution exists (if this may happen)."
+   },
+   {
+    "doc": "Robotics1_MidTerm_2024-25_24.11.22",
+    "ref": "Robotics1_MidTerm_2024-25_24.11.22 / Exercise 5 / 2",
+    "page": 2,
+    "quote": "Solve the inverse kinematics problem in closed form for a given r d ∈ R4 , determining also the possible singular situations. With L = 1.5 m, provide the numerical solutions for"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-12-trajectory",
+  "title": "Coordination required — Trajectory planning (joint space)",
+  "rule_id": "DT-12",
+  "trigger": "Two joints or two robots must arrive together.",
+  "wrong_turn": "Plans each joint independently to its own minimum time, so they finish at different instants and the path is not what was asked.",
+  "root_misconception": "Synchronising is a detail of presentation; each axis is a separate problem.",
+  "concepts": [
+   "trajectory"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_21.10.19",
+    "ref": "Exercise 2, p. 1",
+    "quote": "using the associated symbolic DH parameters, determine a smooth and coordinated rest-to-rest joint trajectory that will move in T seconds the robot gripper from the initial position pi = (a1 + a3 , 0, 0) to"
+   },
+   "lecture": {
+    "doc": "13_TrajectoryPlanning",
+    "ref": "p. 29",
+    "quote": "Trajectory planning in joint space"
+   }
+  },
+  "probe": "Joint 2 finishes after joint 1 — what is the end-effector doing in between?",
+  "correction": "Plan per joint, take the maximum duration, then time-scale every other joint to match. Coordination is a constraint, not a tidy-up.",
+  "marks_at_risk": 4.98,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 10,
+  "exams_affected": 10,
+  "marks_per_exam_all": 0.51,
+  "occurrences": [
+   {
+    "doc": "Robotics1_21.10.19",
+    "ref": "Robotics1_21.10.19 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "using the associated symbolic DH parameters, determine a smooth and coordinated rest-to-rest joint trajectory that will move in T seconds the robot gripper from the initial position pi = (a1 + a3 , 0, 0) to"
+   },
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 2 / clause 1",
+    "page": 2,
+    "quote": "Determine a polynomial joint trajectory q(t) that realizes a coordinated motion in minimum time T of two robot joints from q(0) = (0, −π/2) to q(T ) = (π/4, π/4) [rad], with boundary conditions q̇(0)"
+   },
+   {
+    "doc": "Robotics1_21.09.10",
+    "ref": "Robotics1_21.09.10 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "generic value L for link lengths), determine a smooth, coordinated rest-to-rest joint trajectory q d (t) that will move the robot in T seconds from the initial value r i = (2L, 0, π/4) of"
+   },
+   {
+    "doc": "Robotics1_20.01.07",
+    "ref": "Robotics1_20.01.07 / Exercise 3 / b",
+    "page": 2,
+    "quote": "From this state, plan a state-to-rest coordinated Cartesian motion that will complete the task in a given time T = 2, with continuity up to the acceleration (including at the two ends"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-14-dh_frames",
+  "title": "Frame placement pinned — DH frame assignment",
+  "rule_id": "DT-14",
+  "trigger": "The task dictates where a frame origin must sit.",
+  "wrong_turn": "Places the last frame at the flange instead of the specified point, then inherits an offset that contaminates every later answer.",
+  "root_misconception": "Frame origins are arbitrary as long as the transform is right.",
+  "concepts": [
+   "dh_frames"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_17.01.11",
+    "ref": "Exercise 1, p. 1",
+    "quote": "the link frames according to the Denavit-Hartenberg convention. Place the origin of the last frame coincident with point P . Make the free choices that are available so as to eliminate (i.e., “zeroing out”) as many"
+   },
+   "lecture": {
+    "doc": "09_DirectKinematics",
+    "ref": "p. 12",
+    "quote": "Denavit-Hartenberg (DH) frames joint axis joint axis joint"
+   }
+  },
+  "probe": "Your origin sits at the flange — what is the constant offset to P, and which matrix absorbed it?",
+  "correction": "Place origins to the stated rule first; frame choice is a convention you must honour, and every downstream matrix depends on it.",
+  "marks_at_risk": 3.16,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 15,
+  "exams_affected": 14,
+  "marks_per_exam_all": 0.46,
+  "occurrences": [
+   {
+    "doc": "Robotics1_17.01.11",
+    "ref": "Robotics1_17.01.11 / Exercise 1 / 1",
+    "page": 1,
+    "quote": "the link frames according to the Denavit-Hartenberg convention. Place the origin of the last frame coincident with point P . Make the free choices that are available so as to eliminate (i.e., “zeroing out”) as many"
+   },
+   {
+    "doc": "Robotics1_23.03.24_text",
+    "ref": "Robotics1_23.03.24_text / Exercise 1 / 1",
+    "page": 1,
+    "quote": "convention and provide the corresponding table of parameters. The origin of the last DH frame should coincide with point P . Specify the signs of the linear DH parameters that are constant and non-zero, as"
+   },
+   {
+    "doc": "Robotics1_26.09.14",
+    "ref": "Robotics1_26.09.14 / Exercise 3 / a",
+    "page": 2,
+    "quote": "frames according to the standard Denavit-Hartenberg (DH) convention, placing the origin of the last frame at point P . Draw the DH frames on the robot and provide the corresponding table of parameters."
+   },
+   {
+    "doc": "Robotics1_26.01.12",
+    "ref": "Robotics1_26.01.12 / Exercise 1 / 1",
+    "page": 1,
+    "quote": "Denavit-Hartenberg (DH) convention and determine the corresponding table of parameters. Place the origin of the last DH frame at the center of the rolling tool. Draw the frames directly on the figure."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-01-dh_frames",
+  "title": "Sign gauge pre-empted — DH frame assignment",
+  "rule_id": "DT-01",
+  "trigger": "The task constrains the sign of the DH parameters before the student starts.",
+  "wrong_turn": "Assigns z-axes in the opposite direction, so d or a come out negative, then flips a sign somewhere downstream to compensate.",
+  "root_misconception": "DH parameters are whatever the diagram shows; the convention is decoration rather than a gauge choice you must declare.",
+  "concepts": [
+   "dh_frames"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_24.02.16",
+    "ref": "Exercise 2a, p. 2",
+    "quote": "Denavit-Hartenberg (D-H) convention, so that all constant D-H parameters are non-negative. Provide the table with the corresponding parameters. The first frame should be placed on the floor at the robot base and the origin of the"
+   },
+   "lecture": {
+    "doc": "09_DirectKinematics",
+    "ref": "p. 12",
+    "quote": "Denavit-Hartenberg (DH) frames joint axis joint axis joint"
+   }
+  },
+  "probe": "For this arm, which DH entries can be made nonnegative, and which axis direction did you have to reverse to do it?",
+  "correction": "Fix the z-axis direction rule first, then read the table off. Verify the sign of every d and a against the drawn axis before writing k(q).",
+  "marks_at_risk": 2.9,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 16,
+  "exams_affected": 15,
+  "marks_per_exam_all": 0.45,
+  "occurrences": [
+   {
+    "doc": "Robotics1_24.02.16",
+    "ref": "Robotics1_24.02.16 / Exercise 2 / a",
+    "page": 2,
+    "quote": "Denavit-Hartenberg (D-H) convention, so that all constant D-H parameters are non-negative. Provide the table with the corresponding parameters. The first frame should be placed on the floor at the robot base and the origin of the"
+   },
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 1 / a",
+    "page": 1,
+    "quote": "frames according to the standard Denavit-Hartenberg (DH) convention so that all constant DH parameters are nonnegative. Place the origin of the last DH frame at point P . Draw the frames directly on the figure. Provide"
+   },
+   {
+    "doc": "Robotics1_18.03.27",
+    "ref": "Robotics1_18.03.27 / Exercise 1 / 1",
+    "page": 1,
+    "quote": "associated table of parameters so that all constant parameters are non-negative. Draw the frames and fill in the table directly on the extra sheet #1 provided separately. The two DH frames 0 and 5 are already"
+   },
+   {
+    "doc": "Robotics1_20.01.07",
+    "ref": "Robotics1_20.01.07 / Exercise 3 / d",
+    "page": 2,
+    "quote": "and assume that the prismatic joint range is limited to non-negative values of q2 and that the third link has length L = 1 [m]. Show that the parametrized Cartesian task implies also a unique parametrized"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-13-inverse_kinematics",
+  "title": "Joint limits active — Inverse kinematics",
+  "rule_id": "DT-13",
+  "trigger": "The workspace question is posed with finite joint ranges.",
+  "wrong_turn": "Draws the reachable workspace from link lengths alone, giving an annulus that the joint limits actually cut away.",
+  "root_misconception": "Workspace is a geometric property of the arm, independent of the joints' travel.",
+  "concepts": [
+   "inverse_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_14.10.27",
+    "ref": "Exercise 2b, p. 1",
+    "quote": "the following, neglect the presence of joint limits. When the robot arm is fully stretched along the x0 axis, determine, if possible, a joint velocity q̇ ∈ R4 that realizes the following"
+   },
+   "lecture": {
+    "doc": "10_InverseKinematics",
+    "ref": "p. 3",
+    "quote": "Inverse kinematics problem"
+   }
+  },
+  "probe": "Which part of your annulus is unreachable because q2 cannot exceed its stop?",
+  "correction": "Intersect the geometric workspace with the image of the joint box. Report the boundary that comes from limits, not from link lengths.",
+  "marks_at_risk": 3.13,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 13,
+  "exams_affected": 12,
+  "marks_per_exam_all": 0.39,
+  "occurrences": [
+   {
+    "doc": "Robotics1_14.10.27",
+    "ref": "Robotics1_14.10.27 / Exercise 2 / b",
+    "page": 1,
+    "quote": "the following, neglect the presence of joint limits. When the robot arm is fully stretched along the x0 axis, determine, if possible, a joint velocity q̇ ∈ R4 that realizes the following"
+   },
+   {
+    "doc": "Robotics1_14.01.09",
+    "ref": "Robotics1_14.01.09 / Exercise 1 / 3",
+    "page": 1,
+    "quote": "Assuming that the two prismatic joints have a limited range, |qi | < D (i = 1, 2) with D > L: – draw the primary and secondary workspaces of the robot, respectively WS1"
+   },
+   {
+    "doc": "Robotics1_Midterm_2026-27_26.11.13_text",
+    "ref": "Robotics1_Midterm_2026-27_26.11.13_text / Exercise 3 / 3",
+    "page": 1,
+    "quote": "Assume that both joints have un limited range. For a desired planar position p̄d = (pdx , pdy ) ↓ R2 of the last DH frame, find all inverse kinematics (IK) solutions"
+   },
+   {
+    "doc": "Robotics1_21.09.10",
+    "ref": "Robotics1_21.09.10 / Exercise 1 / d",
+    "page": 1,
+    "quote": "Draw the primary and secondary workspaces for this robot, when the prismatic joint has a finite range q1 ∈ [0, L] while the revolute joints have unlimited range."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-08-singularity",
+  "title": "Justification demanded — Singular configurations",
+  "rule_id": "DT-08",
+  "trigger": "A 'show that' / 'justify' imperative whose conclusion is already given.",
+  "wrong_turn": "Substitutes a number, sees it works, and writes 'verified'. Or restates the claim in different words.",
+  "root_misconception": "Matching the stated answer is the same as establishing it.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_12.02.09",
+    "ref": "Exercise 3, p. 2",
+    "quote": "robot configuration. In case it can, provide some reasoning to justify how to execute the desired trajectory; else, explain in detail why this is not possible. \u0001T"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "Show me the step where the conclusion follows — what would break if the claim were false?",
+  "correction": "Prove the general case symbolically; use the numeric instance only as a check. 'Show that' is a proof obligation, not a spot-check.",
+  "marks_at_risk": 4.04,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 10,
+  "exams_affected": 10,
+  "marks_per_exam_all": 0.42,
+  "occurrences": [
+   {
+    "doc": "Robotics1_12.02.09",
+    "ref": "Robotics1_12.02.09 / Exercise 3 / 1",
+    "page": 2,
+    "quote": "robot configuration. In case it can, provide some reasoning to justify how to execute the desired trajectory; else, explain in detail why this is not possible. \u0001T"
+   },
+   {
+    "doc": "Robotics1_23.06.12",
+    "ref": "Robotics1_23.06.12 / Exercise 3 / 2",
+    "page": 2,
+    "quote": "singular configuration. With the robot at q 0 , show that one of the two following six-dimensional end-effector velocities     0 0  3  0 \u0012 \u0013   \u0012 \u0013"
+   },
+   {
+    "doc": "Robotics1_Midterm_2026-27_26.11.13_text",
+    "ref": "Robotics1_Midterm_2026-27_26.11.13_text / Exercise 1 / clause 2",
+    "page": 1,
+    "quote": "Show that it is possible to find a combination of ωi and ωf such that the associated path encounters a singular case for the inverse representation"
+   },
+   {
+    "doc": "Robotics1_24.02.16",
+    "ref": "Robotics1_24.02.16 / Exercise 4 / a",
+    "page": 3,
+    "quote": "Show that the entire desired trajectory pd (t) ∈ R3 belongs to the primary workspace of the robot and that it can be traced without encountering"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-07-inverse_kinematics",
+  "title": "All branches requested — Inverse kinematics",
+  "rule_id": "DT-07",
+  "trigger": "The wording asks for the complete solution set.",
+  "wrong_turn": "Stops at the first root the quadratic returns, or drops the branch that would require a negative joint angle.",
+  "root_misconception": "The solution you found is the solution; other roots are artefacts of the algebra.",
+  "concepts": [
+   "inverse_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_16.09.12",
+    "ref": "Exercise 1, p. 1",
+    "quote": "expressed by a rotation matrix R, and provides as output all solutions for the wrist angles (q4 , q5 , q6 ) in the regular case. Charac- terize also the singular cases, and explain what happens"
+   },
+   "lecture": {
+    "doc": "10_InverseKinematics",
+    "ref": "p. 3",
+    "quote": "Inverse kinematics problem"
+   }
+  },
+  "probe": "Your quadratic had two roots — where did the second one go?",
+  "correction": "Enumerate branches explicitly and budget for them. Count solutions before computing them, so a missing one is visible.",
+  "marks_at_risk": 4.04,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 9,
+  "exams_affected": 9,
+  "marks_per_exam_all": 0.37,
+  "occurrences": [
+   {
+    "doc": "Robotics1_16.09.12",
+    "ref": "Robotics1_16.09.12 / Exercise 1 / 1",
+    "page": 1,
+    "quote": "expressed by a rotation matrix R, and provides as output all solutions for the wrist angles (q4 , q5 , q6 ) in the regular case. Charac- terize also the singular cases, and explain what happens"
+   },
+   {
+    "doc": "Robotics1_MidTerm_2019-20_19.11.29",
+    "ref": "Robotics1_MidTerm_2019-20_19.11.29 / Exercise 3 / 4",
+    "page": 2,
+    "quote": "Provide all solutions, if any, to each of the following three inverse kinematics problems, where the end-effector position pe ∈ R2 (i.e., reduced to the plane of"
+   },
+   {
+    "doc": "Robotics1_22.07.08",
+    "ref": "Robotics1_22.07.08 / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "sin q3 Provide the closed-form expression of all inverse kinematics solutions q = f −1 (pd ) that realize a desired end-effector position pd ∈ W S1 ."
+   },
+   {
+    "doc": "Robotics1_17.04.11",
+    "ref": "Robotics1_17.04.11 / Exercise 1 / 2",
+    "page": 1,
+    "quote": "and L2 = L3 = 1.5 [m], determine all inverse kinematics solutions in numerical \u0001T form associated to the end-effector position p = −1 1 1.5 [m]."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-16-statics",
+  "title": "Static balance requested — Statics / force transformation",
+  "rule_id": "DT-16",
+  "trigger": "Torques are requested for a held configuration under gravity.",
+  "wrong_turn": "Balances forces at the end-effector instead of transforming the wrench back through J^T, or forgets gravity acts at each centre of mass.",
+  "root_misconception": "Static equilibrium is a force balance at the point where the load is.",
+  "concepts": [
+   "statics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.09.14",
+    "ref": "Exercise 3e, p. 2",
+    "quote": "applied to P that needs no joint torque/force to be statically balanced. f ) Draw the primary workspace of this RP robot when the revolute joint is unrestricted and the prismatic joint has a limited range"
+   },
+   "lecture": {
+    "doc": "12b_StaticsForceTransformations",
+    "ref": "p. 12",
+    "quote": "in singular configurations, there are directions in the task space where external forces are balanced without the need of any joint torque"
+   }
+  },
+  "probe": "Where does the payload weight enter your torque expression, and what happened to each link's own weight?",
+  "correction": "Write τ = J^T F for the external wrench and add the gravity term per link. Statics is a transformation, not a free-body diagram.",
+  "marks_at_risk": 3.27,
+  "strength": "documented",
+  "confidence": 0.95,
+  "questions_affected": 9,
+  "exams_affected": 8,
+  "marks_per_exam_all": 0.27,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.09.14",
+    "ref": "Robotics1_26.09.14 / Exercise 3 / e",
+    "page": 2,
+    "quote": "applied to P that needs no joint torque/force to be statically balanced. f ) Draw the primary workspace of this RP robot when the revolute joint is unrestricted and the prismatic joint has a limited range"
+   },
+   {
+    "doc": "Robotics1_21.06.11",
+    "ref": "Robotics1_21.06.11 / Exercise 2 / b",
+    "page": 1,
+    "quote": "(two torques and a force) needed for static balance. Comments that justify intuitively some of the obtained results are welcome! 1 Use these coordinates in your developments. Note that q and q are"
+   },
+   {
+    "doc": "Robotics1_23.02.13",
+    "ref": "Robotics1_23.02.13 / Exercise 4 / iii",
+    "page": 2,
+    "quote": "all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 . Hint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 ."
+   },
+   {
+    "doc": "Robotics1_19.01.11",
+    "ref": "Robotics1_19.01.11 / Exercise 2 / 2",
+    "page": 1,
+    "quote": "applied at the end-effector that can be statically balanced by zero joint forces/torques (τ = 0, with τ ∈ R4 ). If such a F c 6= 0 does not exist, explain why."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-08-jacobian",
+  "title": "Justification demanded — Differential kinematics / Jacobian",
+  "rule_id": "DT-08",
+  "trigger": "A 'show that' / 'justify' imperative whose conclusion is already given.",
+  "wrong_turn": "Substitutes a number, sees it works, and writes 'verified'. Or restates the claim in different words.",
+  "root_misconception": "Matching the stated answer is the same as establishing it.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_25.02.07_text",
+    "ref": "Exercise 2, p. 1",
+    "quote": "Verify that this is not a singular case by analyzing the Jacobian of the direct kinematics. a y p q3 l2 q2 l1 q1 x Figure"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "Show me the step where the conclusion follows — what would break if the claim were false?",
+  "correction": "Prove the general case symbolically; use the numeric instance only as a check. 'Show that' is a proof obligation, not a spot-check.",
+  "marks_at_risk": 4.62,
+  "strength": "documented",
+  "confidence": 0.91,
+  "questions_affected": 6,
+  "exams_affected": 6,
+  "marks_per_exam_all": 0.29,
+  "occurrences": [
+   {
+    "doc": "Robotics1_23.06.12",
+    "ref": "Robotics1_23.06.12 / Exercise 3 / 2",
+    "page": 2,
+    "quote": "singular configuration. With the robot at q 0 , show that one of the two following six-dimensional end-effector velocities     0 0  3  0 \u0012 \u0013   \u0012 \u0013"
+   },
+   {
+    "doc": "Robotics1_25.02.07_text",
+    "ref": "Robotics1_25.02.07_text / Exercise 2 / clause 4",
+    "page": 1,
+    "quote": "Verify that this is not a singular case by analyzing the Jacobian of the direct kinematics. a y p q3 l2 q2 l1 q1 x Figure"
+   },
+   {
+    "doc": "Robotics1_14.02.06",
+    "ref": "Robotics1_14.02.06 / Exercise 3 / clause 1",
+    "page": 2,
+    "quote": "Prove that the kinematic control law q̇ = J −1 (q) ṙ d + k J T (q) (r d − r(q)) , (1) with the"
+   },
+   {
+    "doc": "Robotics1_26.02.16",
+    "ref": "Robotics1_26.02.16 / Exercise 3 / clause 1",
+    "page": 2,
+    "quote": "Prove the relation (J T )# = (J # )T for a general Jacobian matrix J of any size and rank."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-04-jacobian",
+  "title": "Symbolic form demanded — Differential kinematics / Jacobian",
+  "rule_id": "DT-04",
+  "trigger": "The task requires a symbolic expression, not a number.",
+  "wrong_turn": "Substitutes the numeric link lengths at the first opportunity, then cannot simplify, factor or find the singular set later.",
+  "root_misconception": "Numbers make it concrete, so numbering early is safer.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Exercise 1b, p. 1",
+    "quote": "Compute in symbolic form the direct kinematics p = f (q) for the position of the end-effector. Derive the analytical Jacobian J (q) of this map."
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "Write k(q) with the link lengths still as symbols; where does l2 appear twice?",
+  "correction": "Carry symbols to the end. Numbers are a final check, never an intermediate step, because the structure is what is being marked.",
+  "marks_at_risk": 3.39,
+  "strength": "documented",
+  "confidence": 0.91,
+  "questions_affected": 6,
+  "exams_affected": 6,
+  "marks_per_exam_all": 0.21,
+  "occurrences": [
+   {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Robotics1_21.07.12 / Exercise 1 / b",
+    "page": 1,
+    "quote": "Compute in symbolic form the direct kinematics p = f (q) for the position of the end-effector. Derive the analytical Jacobian J (q) of this map."
+   },
+   {
+    "doc": "Robotics1_23.03.24_text",
+    "ref": "Robotics1_23.03.24_text / Exercise 1 / 2",
+    "page": 1,
+    "quote": "Determine the symbolic expression of all elements in the 6 × 6 geometric Jacobian J (q) of this robot and check that q 0 = (1, 1, 1,"
+   },
+   {
+    "doc": "Robotics1_18.03.27",
+    "ref": "Robotics1_18.03.27 / Exercise 1 / 4",
+    "page": 1,
+    "quote": "Determine the symbolic expression of the 6 × 5 geometric Jacobian J (q) for this robot."
+   },
+   {
+    "doc": "Robotics1_24.01.24",
+    "ref": "Robotics1_24.01.24 / Exercise 4 / 1",
+    "page": 2,
+    "quote": "the 6 × 3 geometric Jacobian matrix J g (q) in symbolic form of this robot."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-05-jacobian",
+  "title": "Minimum-norm solution specified — Differential kinematics / Jacobian",
+  "rule_id": "DT-05",
+  "trigger": "Among infinitely many joint velocities producing the same v, one is required.",
+  "wrong_turn": "Picks any particular solution (often the one the elimination happened to leave) and reports it as 'the' solution.",
+  "root_misconception": "An underdetermined system still has an answer, and any answer is it.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.01.12",
+    "ref": "Exercise 3, p. 2",
+    "quote": "are infinite solutions q̇ and you choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint velocity with minimum norm that minimizes also the error norm ∥J (q)q̇"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "Your q̇ has a component in the null space of J. What is that component and what is it doing to the norm?",
+  "correction": "Project the particular solution onto the row space: use the pseudoinverse and say explicitly that the null-space part is set to zero.",
+  "marks_at_risk": 5.0,
+  "strength": "documented",
+  "confidence": 0.8,
+  "questions_affected": 3,
+  "exams_affected": 3,
+  "marks_per_exam_all": 0.15,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.01.12",
+    "ref": "Robotics1_26.01.12 / Exercise 3 / clause 1",
+    "page": 2,
+    "quote": "are infinite solutions q̇ and you choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint velocity with minimum norm that minimizes also the error norm ∥J (q)q̇"
+   },
+   {
+    "doc": "Robotics1_26.01.12_with_midterm",
+    "ref": "Robotics1_26.01.12_with_midterm / Exercise 2 / clause 1",
+    "page": 1,
+    "quote": "are infinite solutions q̇ and you choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint velocity with minimum norm that minimizes also the error norm ∥J (q)q̇"
+   },
+   {
+    "doc": "Robotics1_16.09.12",
+    "ref": "Robotics1_16.09.12 / Exercise 2 / 2",
+    "page": 1,
+    "quote": "velocity ṗd = −1 0 [m/s], determine numerically – the minimum norm (least squares) solution q̇ LS ; – another solution q̇ 0 6= q̇ LS , such that J (q 0 )q̇ 0 = ṗd"
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-17-singularity",
+  "title": "Orientation inverse singular — Singular configurations",
+  "rule_id": "DT-17",
+  "trigger": "The task asks for angle extraction and then asks about singularity.",
+  "wrong_turn": "Uses asin where atan2 is required, so the angle set collapses at ±90° and the two branches are never separated.",
+  "root_misconception": "Euler extraction is a formula; its branch structure is not part of the answer.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Exercise 3, p. 2",
+    "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "At pitch = 90°, which two angles become indistinguishable, and what does your extraction return?",
+  "correction": "Use atan2 throughout and handle the gimbal-lock branch explicitly. The singularity is a property of the parameterisation, not of R.",
+  "marks_at_risk": 6.88,
+  "strength": "documented",
+  "confidence": 0.77,
+  "questions_affected": 2,
+  "exams_affected": 2,
+  "marks_per_exam_all": 0.14,
+  "occurrences": [
+   {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Robotics1_21.07.12 / Exercise 3 / clause 1",
+    "page": 2,
+    "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2"
+   },
+   {
+    "doc": "Robotics1_23.02.13",
+    "ref": "Robotics1_23.02.13 / Exercise 2 / clause 2",
+    "page": 1,
+    "quote": "you don’t, provide then a numerical counterexample (without any representation singularity)."
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-17-orientation",
+  "title": "Orientation inverse singular — Orientation / Euler angles",
+  "rule_id": "DT-17",
+  "trigger": "The task asks for angle extraction and then asks about singularity.",
+  "wrong_turn": "Uses asin where atan2 is required, so the angle set collapses at ±90° and the two branches are never separated.",
+  "root_misconception": "Euler extraction is a formula; its branch structure is not part of the answer.",
+  "concepts": [
+   "orientation"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Exercise 3, p. 2",
+    "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2"
+   },
+   "lecture": {
+    "doc": "08_EulerRPYHomogeneous",
+    "ref": "p. 11",
+    "quote": "describes the relation between two reference frames (relative pose = position & orientation)"
+   }
+  },
+  "probe": "At pitch = 90°, which two angles become indistinguishable, and what does your extraction return?",
+  "correction": "Use atan2 throughout and handle the gimbal-lock branch explicitly. The singularity is a property of the parameterisation, not of R.",
+  "marks_at_risk": 10.0,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.1,
+  "occurrences": [
+   {
+    "doc": "Robotics1_21.07.12",
+    "ref": "Robotics1_21.07.12 / Exercise 3 / clause 1",
+    "page": 2,
+    "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-13-dh_frames",
+  "title": "Joint limits active — DH frame assignment",
+  "rule_id": "DT-13",
+  "trigger": "The workspace question is posed with finite joint ranges.",
+  "wrong_turn": "Draws the reachable workspace from link lengths alone, giving an annulus that the joint limits actually cut away.",
+  "root_misconception": "Workspace is a geometric property of the arm, independent of the joints' travel.",
+  "concepts": [
+   "dh_frames"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_20.01.07",
+    "ref": "Exercise 3d, p. 2",
+    "quote": "variables to the RPR robot, and assume that the prismatic joint range is limited to non-negative values of q2 and that the third link has length L = 1 [m]. Show that the parametrized Cartesian task"
+   },
+   "lecture": {
+    "doc": "09_DirectKinematics",
+    "ref": "p. 12",
+    "quote": "Denavit-Hartenberg (DH) frames joint axis joint axis joint"
+   }
+  },
+  "probe": "Which part of your annulus is unreachable because q2 cannot exceed its stop?",
+  "correction": "Intersect the geometric workspace with the image of the joint box. Report the boundary that comes from limits, not from link lengths.",
+  "marks_at_risk": 2.31,
+  "strength": "documented",
+  "confidence": 0.84,
+  "questions_affected": 4,
+  "exams_affected": 4,
+  "marks_per_exam_all": 0.1,
+  "occurrences": [
+   {
+    "doc": "Robotics1_20.01.07",
+    "ref": "Robotics1_20.01.07 / Exercise 3 / d",
+    "page": 2,
+    "quote": "variables to the RPR robot, and assume that the prismatic joint range is limited to non-negative values of q2 and that the third link has length L = 1 [m]. Show that the parametrized Cartesian task"
+   },
+   {
+    "doc": "Robotics1_23.02.13",
+    "ref": "Robotics1_23.02.13 / Exercise 1 / 2",
+    "page": 1,
+    "quote": "Suppose that the two prismatic joints have a limited range: |qi | < D, i = 2, 3. Determine the maximum possible distance ∆ of the end-effector point P from the origin of the"
+   },
+   {
+    "doc": "Robotics1_Midterm_2026-27_26.11.13_text",
+    "ref": "Robotics1_Midterm_2026-27_26.11.13_text / Exercise 3 / 3",
+    "page": 1,
+    "quote": "Assume that both joints have un limited range. For a desired planar position p̄d = (pdx , pdy ) ↓ R2 of the last DH frame, find all inverse kinematics (IK) solutions"
+   },
+   {
+    "doc": "Robotics1_19.06.17",
+    "ref": "Robotics1_19.06.17 / Exercise 1 / b",
+    "page": 1,
+    "quote": "Determine the actual joint ranges (lower and upper bounds, θi,min and θi,max for i = 1, . . . , 6) according to the DH convention you have defined."
+   }
+  ],
+  "thin_evidence": false
+ },
+ {
+  "id": "FM-DT-15-jacobian",
+  "title": "Zero configuration probe — Differential kinematics / Jacobian",
+  "rule_id": "DT-15",
+  "trigger": "A quantity is requested specifically at q = 0.",
+  "wrong_turn": "Uses the general formula but forgets that at q = 0 the rotation blocks collapse, so terms that cancel numerically are dropped by hand.",
+  "root_misconception": "The zero configuration is a trivial case, so the general expression can be evaluated loosely.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_18.06.11",
+    "ref": "Exercise 1, p. 1",
+    "quote": "Sketch the robot in the zero configuration (q = 0); find and sketch also the configuration q s where the robot gripper is pointing in the direction y 0"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "At q = 0, which columns of J become mutually parallel — and what does that do to the rank?",
+  "correction": "Evaluate symbolically at q = 0 rather than substituting early. Cancellation is exactly where the mark is lost, because the structure disappears.",
+  "marks_at_risk": 1.77,
+  "strength": "reconstructed",
+  "confidence": 0.55,
+  "questions_affected": 2,
+  "exams_affected": 2,
+  "marks_per_exam_all": 0.04,
+  "occurrences": [
+   {
+    "doc": "Robotics1_18.06.11",
+    "ref": "Robotics1_18.06.11 / Exercise 1 / 3",
+    "page": 1,
+    "quote": "Sketch the robot in the zero configuration (q = 0); find and sketch also the configuration q s where the robot gripper is pointing in the direction y 0"
+   },
+   {
+    "doc": "Robotics1_17.06.06",
+    "ref": "Robotics1_17.06.06 / Exercise 1 / 4",
+    "page": 1,
+    "quote": "Draw the manipulator in the two zero configurations: the one associated with q m = 0 and the one with q = 0."
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-03-singularity",
+  "title": "Singularity existence probed — Singular configurations",
+  "rule_id": "DT-03",
+  "trigger": "A yes/no question asks whether a singularity can occur at all.",
+  "wrong_turn": "Answers 'no' because the determinant looked non-zero in the numeric example, or answers 'yes' without naming the configuration.",
+  "root_misconception": "Singularity is a property of the numbers in front of you rather than a property of the structure.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Exercise 1c, p. 1",
+    "quote": "terms of XYZ angles (ψ, θ, ϕ) of the RPY-type. Is it possible to encounter a singular situation for this specific problem?"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "Which symbolic entry of J can vanish for some q, regardless of the numeric values you were given?",
+  "correction": "Work symbolically to the determinant, then look for the factor that can be zero. The answer is a set of configurations, not a yes/no.",
+  "marks_at_risk": 3.0,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 1 / c",
+    "page": 1,
+    "quote": "terms of XYZ angles (ψ, θ, ϕ) of the RPY-type. Is it possible to encounter a singular situation for this specific problem?"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-02-singularity",
+  "title": "Singular cases flagged — Singular configurations",
+  "rule_id": "DT-02",
+  "trigger": "The task tells the student that singular cases change the answer.",
+  "wrong_turn": "Reports the generic solution only, or divides by a term that vanishes at the singularity and calls the infinite result 'undefined'.",
+  "root_misconception": "A solution derived by inversion is valid everywhere; edge cases are a detail to mention, not a change of structure.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Exercise 1e, p. 1",
+    "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "At the configuration you just solved for, which matrix entry is zero, and what happens to your formula when it is?",
+  "correction": "Enumerate the singular set first, then solve on each branch. State rank and a null-space basis at the singularity instead of inverting.",
+  "marks_at_risk": 3.0,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 1 / e",
+    "page": 1,
+    "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-02-inverse_kinematics",
+  "title": "Singular cases flagged — Inverse kinematics",
+  "rule_id": "DT-02",
+  "trigger": "The task tells the student that singular cases change the answer.",
+  "wrong_turn": "Reports the generic solution only, or divides by a term that vanishes at the singularity and calls the infinite result 'undefined'.",
+  "root_misconception": "A solution derived by inversion is valid everywhere; edge cases are a detail to mention, not a change of structure.",
+  "concepts": [
+   "inverse_kinematics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Exercise 1e, p. 1",
+    "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1"
+   },
+   "lecture": {
+    "doc": "10_InverseKinematics",
+    "ref": "p. 3",
+    "quote": "Inverse kinematics problem"
+   }
+  },
+  "probe": "At the configuration you just solved for, which matrix entry is zero, and what happens to your formula when it is?",
+  "correction": "Enumerate the singular set first, then solve on each branch. State rank and a null-space basis at the singularity instead of inverting.",
+  "marks_at_risk": 3.0,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 1 / e",
+    "page": 1,
+    "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-05-singularity",
+  "title": "Minimum-norm solution specified — Singular configurations",
+  "rule_id": "DT-05",
+  "trigger": "Among infinitely many joint velocities producing the same v, one is required.",
+  "wrong_turn": "Picks any particular solution (often the one the elimination happened to leave) and reports it as 'the' solution.",
+  "root_misconception": "An underdetermined system still has an answer, and any answer is it.",
+  "concepts": [
+   "singularity"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Exercise 1e, p. 1",
+    "quote": "Find then a joint velocity q̇ s ∈ R3 with minimum norm that realizes v. f ) For a given p = pd , determine all inverse kinematics solutions q = k−1 (pd ) in closed"
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 32",
+    "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control"
+   }
+  },
+  "probe": "Your q̇ has a component in the null space of J. What is that component and what is it doing to the norm?",
+  "correction": "Project the particular solution onto the row space: use the pseudoinverse and say explicitly that the null-space part is set to zero.",
+  "marks_at_risk": 3.0,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_26.07.13",
+    "ref": "Robotics1_26.07.13 / Exercise 1 / e",
+    "page": 1,
+    "quote": "Find then a joint velocity q̇ s ∈ R3 with minimum norm that realizes v. f ) For a given p = pd , determine all inverse kinematics solutions q = k−1 (pd ) in closed"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-15-statics",
+  "title": "Zero configuration probe — Statics / force transformation",
+  "rule_id": "DT-15",
+  "trigger": "A quantity is requested specifically at q = 0.",
+  "wrong_turn": "Uses the general formula but forgets that at q = 0 the rotation blocks collapse, so terms that cancel numerically are dropped by hand.",
+  "root_misconception": "The zero configuration is a trivial case, so the general expression can be evaluated loosely.",
+  "concepts": [
+   "statics"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_17.01.11",
+    "ref": "Exercise 3, p. 2",
+    "quote": "With the robot in the zero configuration, q = 0, determine the joint torque τ ∈ R3 that balances statically a force F , applied to the robot tip,"
+   },
+   "lecture": {
+    "doc": "12b_StaticsForceTransformations",
+    "ref": "p. 12",
+    "quote": "in singular configurations, there are directions in the task space where external forces are balanced without the need of any joint torque"
+   }
+  },
+  "probe": "At q = 0, which columns of J become mutually parallel — and what does that do to the rank?",
+  "correction": "Evaluate symbolically at q = 0 rather than substituting early. Cancellation is exactly where the mark is lost, because the structure disappears.",
+  "marks_at_risk": 2.5,
+  "strength": "reconstructed",
+  "confidence": 0.52,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_17.01.11",
+    "ref": "Robotics1_17.01.11 / Exercise 3 / 3",
+    "page": 2,
+    "quote": "With the robot in the zero configuration, q = 0, determine the joint torque τ ∈ R3 that balances statically a force F , applied to the robot tip,"
+   }
+  ],
+  "thin_evidence": true
+ },
+ {
+  "id": "FM-DT-16-jacobian",
+  "title": "Static balance requested — Differential kinematics / Jacobian",
+  "rule_id": "DT-16",
+  "trigger": "Torques are requested for a held configuration under gravity.",
+  "wrong_turn": "Balances forces at the end-effector instead of transforming the wrench back through J^T, or forgets gravity acts at each centre of mass.",
+  "root_misconception": "Static equilibrium is a force balance at the point where the load is.",
+  "concepts": [
+   "jacobian"
+  ],
+  "evidence": {
+   "exam": {
+    "doc": "Robotics1_23.02.13",
+    "ref": "Exercise 4iii, p. 2",
+    "quote": "all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 . Hint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 ."
+   },
+   "lecture": {
+    "doc": "11_DifferentialKinematics",
+    "ref": "p. 2",
+    "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level"
+   }
+  },
+  "probe": "Where does the payload weight enter your torque expression, and what happened to each link's own weight?",
+  "correction": "Write τ = J^T F for the external wrench and add the gravity term per link. Statics is a transformation, not a free-body diagram.",
+  "marks_at_risk": 2.5,
+  "strength": "documented",
+  "confidence": 0.73,
+  "questions_affected": 1,
+  "exams_affected": 1,
+  "marks_per_exam_all": 0.03,
+  "occurrences": [
+   {
+    "doc": "Robotics1_23.02.13",
+    "ref": "Robotics1_23.02.13 / Exercise 4 / iii",
+    "page": 2,
+    "quote": "all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 . Hint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 ."
+   }
+  ],
+  "thin_evidence": true
+ }
+]</script>
+<script id="d-pages" type="application/json">{"Robotics1_18.06.11": {"1": "                                           Robotics I\n                                           June 11, 2018\nExercise 1\nConsider the planar 2R robot in Fig. 1, having a L-shaped second link. A frame RFe is attached\nto the gripper mounted on the robot end effector.\n\n                                       A\n\n\n                                                         B\n                                                                           ye\n\n\n                                                          C\n                                                                             xe\n                     Figure 1: A planar 2R robot with L-shaped second link.\n• Assign the link frames and define the joint variables q according to the Denavit-Hartenberg\n  (DH) convention, and complete the associated table of parameters.\n• Determine the robot direct kinematics, specifying the position pe (q) ∈ R3 of the origin of frame\n  RFe and the end-effector orientation as expressed by the rotation matrix 0Re (q) ∈ SO(3).\n• Sketch the robot in the zero configuration (q = 0); find and sketch also the configuration q s\n  where the robot gripper is pointing in the direction y 0 and is the farthest away from axis x0 .\n• Draw the primary workspace of the robot using the symbolic values A, B and C for the lengths.\n• Provide all closed-form solutions to the inverse kinematics problem, when the end-effector posi-\n  tion p̄e ∈ R2 (i.e., reduced to the plane of motion) is given as input.\n• Derive the 2 × 2 Jacobian J in\n                                              v e = J (q)q̇,\n               ˙       2\n  where v e = p̄e ∈ R is the linear velocity of the end-effector in the plane.\n• Determine all singular configurations of the Jacobian matrix J (q). In each of these singularities,\n  provide a basis for the null space and the range space of J .\n• Using the numerical data\n                               A = 0.6,       B = 0.3,         C = 0.4    [m]                        (1)\n                                                                                                 T\n     – find all joint configurations q sol associated to the end-effector position p̄e = (0.6 −0.5) [m];\n     – for each q sol , compute the joint velocity q̇ sol that realizes the velocity v e = (1 0)T [m/s];\n       are these joint velocities equal or different in norm? why?\nExercise 2\nFor the robot in Exercise 1, find the minimum time rest-to-rest motion between q 0 = (1 − 0.5)T\nand q f = (0 0.2)T [rad], when the joint velocities and accelerations are subject to the bounds\n                       |q̇1 | ≤ V1 = 0.5 [rad/s],       |q̈1 | ≤ A1 = 0.8 [rad/s2 ],\n                                                                                                     (2)\n                       |q̇2 | ≤ V2 = 0.8 [rad/s],       |q̈2 | ≤ A2 = 0.5 [rad/s2 ].\nDraw accurately the minimum time velocity profiles of the two joints, when a coordinated motion\nis also required.\n                               [180 minutes, open books but no computer or smartphone]\n\n\n                                                    1"}, "09_DirectKinematics": {"8": "                  Direct kinematics of 2R planar robot\n                                   just using inspection…\n\n 𝑦                                                                      𝑝%\n                                   𝑃     𝜙       𝑞#\n 𝑝𝑦                                •          𝑞= 𝑞                  𝑟 = 𝑝&\n                                                  $\n                                                                        𝜙\n                         𝑙2                      𝑛=2             𝑚=3\n                              𝑞2\n                                              § one may “express” more task variables\n             𝑙1                                 with less joint variables (here, 𝑚 > 𝑛) …\n                    𝑞1                       § but one cannot “command” independently\n                                   𝑝𝑥   𝑥      more task variables than joint variables\n\n\n                         𝑝𝑥 = 𝑙1 cos𝑞1 + 𝑙2 cos(𝑞1 + 𝑞2)\n                         𝑝𝑦 = 𝑙1 sin𝑞1 + 𝑙2 sin(𝑞1 + 𝑞2)\n                         𝜙 = 𝑞1 + 𝑞2\n                   for more general cases, we need a ‘method’!\nRobotics 1                                                                                  8", "12": "              Denavit-Hartenberg (DH) frames\n joint axis                              joint axis                        joint axis\n    𝑖−1                                        𝑖                             𝑖+1\n                    link 𝑖 − 1\n                                                            link 𝑖\n\n              link 𝑖 − 1 is moved\n                  by joint 𝑖 − 1                        frame 𝑅𝐹𝑖 is\n                                                      attached to link 𝑖           𝛼*\n                                       𝑂(+                                   𝑧(\n                                             𝑧()*            𝑎*\n                                 𝑑*                                          𝑂(     𝑥(\n                                              𝑥()*\n                                                     𝜃*\n                                      𝑂()*                     axis of link 𝑖\n                            axis of joint 𝑖               as common normal to\n                     around which link 𝑖 rotates          joint axes 𝑖 and 𝑖 + 1\n                     or along which link 𝑖 slides\n\nRobotics 1                                                                               12"}, "Robotics1_23.02.13": {"2": "Exercise 4\nThe kinematics of a 4-dof robot manipulator is characterized by the DH parameters in Tab. 1.\nBuild the geometric Jacobian J (q) that relates the joint velocities q̇ ∈ IR4 to the six-dimensional\ntwist vector composed by a velocity v = v 4 ∈ IR3 of the origin of the last (end-effector) DH frame\nand by an angular velocity ω = ω 4 ∈ IR3 of the same frame:\n                                        \u0012 \u0013\n                                           v\n                                                = J (q)q̇.\n                                           ω\n\nCorrespondingly, the transpose of this matrix relates the six-dimensional end-effector wrench vector\ncomposed by a force f = f 4 ∈ IR3 applied at the origin of the last (end-effector) DH frame and\nby a moment µ = µ4 ∈ IR3 applied on the same frame to the joint forces/torques τ ∈ IR4 :\n                                                    \u0012 \u0013\n                                               T       f\n                                        τ = J (q)          .\n                                                       µ\n\nFind all the singular configurations of this Jacobian, i.e., all q s such that rank J (q s ) < 4. At a\nsingular configuration q s , determine:\n i) a basis for the joint velocities q̇ ∈ IR4 that produce no end-effector twists;\n ii) a basis for the end-effector twists t ∈ IR6 that are not realizable;\niii) all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 .\nHint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 .\n\n                             i      αi         ai        di         θi\n\n                            1       π/2         0         0         q1\n                            2       π/2         0         0         q2\n                            3      −π/2         0         q3         0\n                            4        0         a4         0         q4\n\n                        Table 1: Table of DH parameters of a 4-dof robot.\n\n                                                                         [240 minutes, open books]\n\n\n\n\n                                                    2"}, "13_TrajectoryPlanning": {"29": "               Trajectory planning in joint space\nn   + = +(,) in time or + = +(%) in space (then, with timing % = %(,))\nn   in general, it is sufficient to work component-wise (+5 in vector + )\nn   implicit definition of trajectory, by solving an interpolation problem\n    with specified boundary conditions (b.c.) in a class of functions\nn   typical classes: polynomials (linear, cubic, quintic,…), trigonometric\n    (cosines, sines, combined, …), clothoids, exponentials, …\nn   imposed conditions (in space and/or in time) [+ bounds/limits]\n     n    passage through points = interpolation (PTP or MP)\n     n    initial, final, intermediate velocity (or geometric tangent for paths)\n     n    initial, final acceleration (or curvature/second space derivative)\n     n    continuity of time-(or space-)derivative up to the E -th order: class 1 6\n         many of the following methods and remarks can be directly applied\n              component-wise also to Cartesian trajectory planning!\nRobotics 1                                                                         29"}, "Robotics1_25.06.11": {"1": "                                                        Robotics 1\n                                                          June 11, 2025\n\n\nExercise 1\n\nConsider the 12 possible sequences of Euler angles ϕ = (α, β, γ) about moving axes. Find which of these\nsequences are associated to a singular transformation ω = T (ϕ)ϕ̇ when ϕ = 0 and explain why. Out of\nthe remaining sequences, determine which one produces T = I when ϕ = 0. For this Euler sequence:\na) determine the values of ϕ that correspond to a singular matrix T ;\nb) in a singularity, find an angular velocity ω that cannot be represented by any ϕ̇;\nc) when ϕ = (π/3, 0, −π/2) [rad], determine ϕ̇ that realizes ω = (1, −1, 1) [rad/s].\n\nExercise 2\n\nThe ABB CBR 15000 collaborative robot (also named GoFa, for ‘Go Faster’) is shown in Fig. 1 and in the\naccompanying Extra Sheet. This robot has has six revolute joints but no spherical wrist. Define the set\nof Denavit–Hartenberg (DH) frames that satisfies the following conditions:\n• the DH frame RF0 is on the floor at the robot base, as shown in the Extra Sheet;\n• the origin O6 of frame RF6 should be placed at the center of the end-effector flange, with the axis z 6 in\n  the approach direction;\n• twist angles are all non-negative (αi ≥ 0, for i = 1, . . . , 6);\n• positive joint rotations should be consistent with those indicated by the manufacturer (see Extra Sheet).\n                          9PAA00000048113_3200x2143.jpg (JPEG Image, 2035 × 2143 pixel...\nDraw the frames and           fill in the corresponding table of https://cdn.productimages.abb.com/9PAA00000048113_3200x2143.jpg\n                                                                                          DH parameters directly on the Extra Sheet. When\nthe robot is in the configuration shown therein, provide also the numerical values of the joint variables\nqi , for i = 1, . . . , 6. [Hint: you should find values qi ∈ [0, π] for all six joints!] Evaluate numerically the\ndirect kinematics in this configuration and verify the correctness of the obtained end-effector position and\norientation with respect to the base frame RF0 .\n\n\n\n\n                                  Figure 1: The ABB CBR 15000 collaborative robot.\n\n\n\n                                                                   1\n\n\n\n                        1 of 1                                                                      02/06/23, 10:56 AM"}, "Robotics1_26.01.12": {"2": "Exercise 3\nFor the velocity transformation J (q)q̇ = ṗ, where J (q) is the 2×2 analytic Jacobian of a 2R planar\nrobot with link lengths l1 = 1, l2 = 0.5 [m] and p ∈ R2 is its end-effector position, build three case\nstudies of the pair (q, ṗ) for which: i) the solution q̇ is unique; ii) there are infinite solutions q̇ and\nyou choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint\nvelocity with minimum norm that minimizes also the error norm ∥J (q)q̇ − ṗ∥. Sketch graphically\nthe associated situations in the joint velocity plane (q̇1 , q̇2 ) and provide the numerical values of q̇\nfor the three case studies.\n\nExercise 4\nConsider a trapezoidal speed profile for a joint that has to move in minimum time from qi to qf ,\nunder the bounds |q̇| ≤ V and |q̈| ≤ A. Draw the position, velocity, and acceleration profiles and\ncompute the relevant parameters for the data qi = π, qf = π/4 [rad] and the bounds V = 3 rad/s\nand A = 5 rad/s2 . Assume now that the same displacement should occur under the same bounds\nin a motion time T̄ that is twice as long as the minimum feasible time T , by using a trapezoidal\nspeed profile that has the same duration Tr of the acceleration/deceleration phases of the minimum\ntime motion. Compute the associated velocity V̄ and acceleration Ā of the new trajectory and\ndraw the corresponding position, velocity, and acceleration profiles.\n\n                                                           [270 minutes (4,5 hours); open books]\n\n\n\n\n                                                     2"}, "Robotics1_16.09.12": {"1": "                                               Robotics I\n                                             September 12, 2016\n\nExercise 1\nThe last three revolute joints (labeled from 4 to 6) of the 6-dof Universal Robot UR10 constitute\na non-spherical wrist and are described by the Denavit-Hartenberg parameters in Tab. 1.\n\n                                 i      αi          ai            di (mm)           θi\n\n\n                                 4     −π/2         0             d4 = 163.9        q4\n\n\n                                 5      π/2         0             d5 = 115.7        q5\n\n\n                                 6       0          0             d6 = 92.2         q6\n\n\n\n     Table 1: Denavit-Hartenberg parameters of the non-spherical wrist of the UR10 robot.\n   • Provide the analytic expressions of the inverse kinematic mapping, which takes as input a\n     desired orientation of the (end-effector) frame 6, as expressed by a rotation matrix R, and\n     provides as output all solutions for the wrist angles (q4 , q5 , q6 ) in the regular case. Charac-\n     terize also the singular cases, and explain what happens in such situations.\n   • Apply your formulas to solve the inverse kinematics for the UR10 robot wrist, given the\n     following numerical input:                          \n                                             0 1      0\n                                          √2        √\n                                                       2 \n                                                          \n                                    R=   √2 0       2\n                                                      √\n                                                          .\n                                              2\n                                             2   0 − 22\n\nExercise 2\nConsider the planar RPR robot in Fig. 1. The prismatic axis of the second joint is skewed by an\nangle β = 45◦ with respect to the first link.\n                                              q3\n\n                                         y               ℓ3         q2\n                                                                      ! = \"/4\n                                                                     (constant) #\n                                               ℓ1\n                                                         q1\n                                                                               x\n              Figure 1: A planar RPR robot with its joint coordinates q1 , q2 and q3 .\n                                                                                                   \u0001T\n   • Using the coordinates shown, provide the Jacobian matrix J (q) that relates q̇ = q̇1 q̇2 q̇3\n                                   \u0001T\n     to the velocity ṗ = ṗx ṗy     of the end effector and find the singularities of this mapping.\n                                                    \u0001T\n   • Let the robot be at q 0 = π/2 0.2 −π/4             [rad,m,rad], with kinematic data `1 = 1 and\n                                                                     \u0001T\n     `3 = 0.5 [m]. For a desired end-effector velocity ṗd = −1 0       [m/s], determine numerically\n        – the minimum norm (least squares) solution q̇ LS ;\n        – another solution q̇ 0 6= q̇ LS , such that J (q 0 )q̇ 0 = ṗd .\n\n                                                                                         [120 minutes; open books]\n\n\n                                                              1"}, "Robotics1_26.09.14": {"2": "Exercise 3\nConsider the planar RP robot in Fig. 3. The second link is skewed by 45◦ with respect to the first link.\n\n\n                                                                        P\n\n\n\n                                             L\n\n\n\n                        Figure 3: A planar RP robot with a skewed second link.\n\na) Assign a set of frames according to the standard Denavit-Hartenberg (DH) convention, placing the\n    origin of the last frame at point P . Draw the DH frames on the robot and provide the corresponding\n    table of parameters.\nb) Compute the direct kinematics p = k(q) for the planar position of point P .\nc) For a given p = pd ∈ R2 , determine all inverse kinematics solutions q = k−1 (pd ) in closed form, taking\n    into account singular cases.\nd) Compute the analytic Jacobian J (q) of the direct kinematics and find the singular configurations q s .\n    For each case, give a basis for the null space of J (q s ).\ne) In a singular configuration, find a nonzero Cartesian force f ∈ R2 applied to P that needs no joint\n    torque/force to be statically balanced.\nf ) Draw the primary workspace of this RP robot when the revolute joint is unrestricted and the prismatic\n    joint has a limited range with q2 ∈ [0, 2L].\n\n\n                                                                 [180 minutes (3 hours); open books]\n\n\n\n\n                                                     2"}, "Robotics1_18.01.11": {"1": "                                            Robotics I\n                                           January 11, 2018\nExercise 1\n\nThe Panda by Franka Emika shown in Fig. 1 is an innovative lightweight robot intended for friendly and\nsafe human-robot interaction. The robot has seven revolute joints and its kinematics is characterized\nby a spherical shoulder, an elbow with two offsets, and a non-spherical wrist. This combination allows\neliminating unaccessible ‘holes’ close to the robot base, thus increasing the robot workspace.\n\n\n\n\n                                       side view                                  top view\n\n        Figure 1: The 7R Panda robot by Franka Emika and two views of its workspace.\n   • Assign the link frames according to the Denavit-Hartenberg (DH) convention and complete the as-\n     sociated symbolic table of parameters, specifying also the signs of the non-zero constant parameters.\n     Draw the frames and fill in the table directly on the extra sheet #1 provided separately. Therein,\n     the two DH frames 0 and 7 are already assigned and should not be modified. [Please, make clean\n     drawings and return the completed sheet with your name written on it.]\n   • Write explicitly the seven resulting DH homogeneous transformation matrices 0A1 (q1 ) to 6A7 (q7 ).\n     [Do NOT attempt to write the direct kinematics in symbolic form!]\n   • Assume that all constant DH parameters have been specified numerically. While the robot is moving,\n     the actual position p ∈ R3 of the end-effector (i.e., of the origin O7 of frame 7) should be computed in\n     real time using the measurements of q ∈ R7 collected by the encoders at each sampling instant (say,\n     every 400 µs). Provide an efficient scheme for this computation, and determine the total number\n     of elementary operations (evaluation of trigonometric functions, of products ×, and of sums +)\n     required at each sampling step. You may proceed without exploiting the specific structure of the\n     DH matrices, or customize the procedure avoiding unnecessary elementary operations for this robot.\n\nExercise 2\n\nA number of statements are reported on the extra sheet #2, regarding the Newton and the Gradient\nmethods for the numerical solution of inverse kinematics problems. Check if each statement is True or\nFalse, providing also a very short motivation/explanation for your answer. [Return the sheet with your\nanswers and your name written on it.]\n\n\n\n\n                                                     1"}, "Robotics1_20.01.07": {"2": "Exercise 3\n\nConsider the 3-dof, planar RPR robot in Fig. 2, with an associated base frame RF0 . The robot\nend-effector should move in contact with the shown surface from point A = (5.2, 1.5) to point\nB = (2.2, −2.5) (both in [m]). Moreover, the orientation of the end-effector with respect to the\nnormal n to the surface should change continuously from the initial angle αA = −60◦ to the final\nangle αB = 30◦ .\na) For the (Cartesian) task variables r = [pT α]T ∈ R3 , provide a spatial description r = r(s) of\n   the defined task in terms of a normalized parameter s ∈ [0, 1].\nb) At time t = 0, the robot end-effector is in point A, with the correct orientation αA , and\n   its initial non-zero velocity is consistent with the execution of the desired task, with a linear\n   speed V = 2.5 [m/s] and an angular speed Ω = 45 [◦/s]. From this state, plan a state-to-rest\n   coordinated Cartesian motion that will complete the task in a given time T = 2, with continuity\n   up to the acceleration (including at the two ends of the path).\nc) What will be the value of the task velocity ṙ(t) at the half-time t = T /2?\nd) Associate next the DH variables to the RPR robot, and assume that the prismatic joint range is\n   limited to non-negative values of q2 and that the third link has length L = 1 [m]. Show that the\n   parametrized Cartesian task implies also a unique parametrized path in the robot joint space,\n   and provide the analytic expression of q = q(s).\ne) What will be the value of the joint velocity q̇(t) at the half-time t = T /2?\n\n\n                                                                            aA = −60°\n\n                                 y0\n                                                                                   A = (5.2, 1.5)\n                                                               L\n                                          q2\n                                                                     n\n                                                     q3\n                            q1\n                                                          x0\n\n\n\n\n                                       aB = 30°\n                                                          B = (2.2, −2.5)\n\n\n             Figure 2: The planar RPR robot and the Cartesian task to be executed.\n\nExercise 4\n\nA number of questions and statements are reported on the Extra Sheet #2. Fill in your answers\nand/or comments on the same sheet, providing also a short motivation/explanation for each item.\nAdd your name on the sheet and return it.\n\n                                                                      [240 minutes, open books]\n\n\n                                                 2"}, "Robotics1_17.01.11": {"2": "Exercise 3\n\nThe kinematics of a spatial 3R robot is defined by the Denavit-Hartenberg parameters in Tab. 1, where\nthe three constant parameters d1 , a2 , and a3 are all strictly positive.\n\n                                 i      αi          ai         di             θi\n\n                                 1      π/2         0          d1             q1\n\n                                 2       0          a2         0              q2\n\n                                 3       0          a3         0              q3\n\n                             Table 1: DH parameters of a spatial 3R robot.\n\nThe 6 × 3 geometric Jacobian matrix J (q) of this robot (expressed in frame 0) has the following expression,\nwhich is only partly specified:\n\n                         − sin q1 (a2 cos q2 + a3 cos(q2 + q3 )) − cos q1 (a2 sin q2 + a3 sin(q2 + q3 )) J13 (q)\n                                                                                                                \n                  ! \n                       cos q1 (a2 cos q2 + a3 cos(q2 + q3 )) − sin q1 (a2 sin q2 + a3 sin(q2 + q3 )) J23 (q) \n                                                                                                                 \n          J L (q)\nJ (q) =            =                                                                                            .\n          J A (q)     \n                                           0                        a2 cos q2 + a3 cos(q2 + q3 )        J33 (q) \n                                                                                                                 \n                                                                    J A (q)\n                                                                                                             (1)\n\n    • Provide the missing expressions of all remaining terms in eq. (1).\n    • Show that this geometric Jacobian has always full (column) rank.\n    • With the robot in the zero configuration, q = 0, determine the joint torque τ ∈ R3 that balances\n      statically a force F , applied to the robot tip, and a moment M , applied to the third link, given by\n                                              \u0001T                              \u0001T\n                          F = 0 1 −1             [N],         M= 1 1 1            [Nm].\n\n      Give the expression of τ , and then its numerical value using the robot kinematic data d1 = a2 =\n      a3 = 1 [m].\n    • Is it possible to apply simultaneously a force F 6= 0 and a moment M 6= 0 so that the robot\n      remains in static equilibrium, without the need of an extra joint torque (τ = 0) for balancing the\n      force/moment pair? Motivate your answer in general, and illustrate it with a supporting example\n      when the robot is in the configuration q = 0.\n\n                                        [240 minutes, open books but no computer or smartphone]\n\n\n\n\n                                                         2", "1": "                                           Robotics I\n                                           January 11, 2017\n\nExercise 1\n\nConsider the 4-dof planar RPRP robot in Fig. 1 and assume that every joint has an unlimited range.\n\n   • Assign the link frames according to the Denavit-Hartenberg convention. Place the origin of the\n     last frame coincident with point P . Make the free choices that are available so as to eliminate\n     (i.e., “zeroing out”) as many unnecessary constant parameters as possible. Draw the chosen frames\n     directly on the robot in Fig. 1.\n   • Provide the Denavit-Hartenberg table of parameters associated to the frames that have been as-\n                                                                        \u0001T               \u0001T\n     signed. Draw the robot in the configuration q = q1 q2 q3 q4           = 0 1 0 1 .\n                                                                                           \u0001T\n   • A task requires to place the end-effector frame at a desired position pd = pdx pdy , with a given\n     orientation αd of axis x4 w.r.t. axis x0 of the base. For the RPRP robot, define the analytic Jacobian\n     associated to this three-dimensional task and determine all its singular configurations.\n\n\n\n                                                                           P\n\n                                       x0\n\n\n\n                           y0\n                                Figure 1: A 4-dof planar RPRP robot.\n\nExercise 2\n\nA planar 2R robot, with link lengths `1 = 1 and `2 = 0.5 [m], has its end-effector placed in the Cartesian\n                           \u0001T\nposition p0 = 0.7 0.7         [m] and is at rest at time t = 0. Using separation in space and time, plan a\n                                                                                                    \u0001T\nCartesian trajectory for the robot end-effector in order to pick an object in the position pd = 0 1    [m]\nat a given time T > 0 (to be treated symbolically in this problem). The object is on a conveyor belt,\n                                                       \u0001T\nmoving with a constant velocity v d = V · −1 0 , where V = 1 [m/s] is the speed. The robot end\neffector should match this velocity at the final position. Moreover, the motion task should be executed\nwith joint velocities q̇(t) that are continuous for all t ∈ [0, T ].\n\n   • Provide the parametric expression p(s) of the chosen Cartesian path, and of its first and second\n     derivative with respect to the path parameter s.\n   • Provide the expression of a timing law s(t) that satisfies the required conditions.\n   • Assuming a motion time T = 1.6 [s], compute the joint velocity q̇ mid = q̇(T /2) at t = T /2, when\n     the robot is executing the planned Cartesian trajectory. How many solutions are there?\n\n\n                                                    1"}, "Robotics1_Midterm_2025-26_25.11.21": {"2": "Exercise 4\nWith reference to Fig. 3, a 3R planar robot is mounted on the ceiling of a room of height h, at a distance\nA from the left wall. At a distance B from the same wall, a collecting container is placed on the floor,\ntilted by an angle β. The shape of the container is approximately an inverted triangle of height L, with a\nrectangular opening of width δ at the top. The robot holds a rectangular object in the gripper and should\nplace it at the top of the container with the right orientation. The object has width δ, fitting exactly in\nthe opening of the container with zero clearance. Using 4 × 4 homogeneous transformation matrices, define\nthe kinematic equation of this robotic task in the world frame RFw . Derive then the expression of the\ndesired end-effector pose 0 T E,d that should be realized by the direct kinematics 0 T E (q) of the robot.\n\n                   A\n                                                       ceiling\n                          x0\n wall\n                                        y0\n\n\n\n           h                                               yE\n                                                                        Figure 3: Set up of the robotic task in Exercise 4.\n\n                               yc                     𝛿\n              container                      xc            zE\n   zw                                             object\n                          L             𝛿\n                xw                  𝛽\n                                                           floor\n               B\nExercise 5\na) For the RRP planar robot in Fig. 4, assign the Denavit–Hartenberg reference frames so that: i) all\naxes xi , i = 1, 2, 3, are in the plane of motion; ii) all constant DH parameters are nonnegative; iii) the\norigin of RF3 is at the end-effector point P = (px , py ) and z3 is in the approach direction. On the sheet\ndistributed separately, draw the frames and complete then the corresponding DH table of parameters.\nWith the resulting joint variables q = (q1 , q2 , q3 ), write the direct kinematics in the form r = f (q) for\nr = (px , py , ϕ), where ϕ is the angle of the approach axis z3 of the last frame with respect to x0 .\nb) For a desired r d , solve in closed form the inverse kinematics problem of this robot, assuming that joints\nhave unlimited range. In doing so, identify the conditions for the existence and the number of solutions.\nc) Define all quantities needed for implementing the Gradient method for solving the inverse kinematics\nproblem. Find the robot configurations in which this numerical method may get stuck with an error\nek = r d − f (q k ) ̸= 0 at the k-th iteration.\n\n         y0\n\n\n\n                     L                                                                Figure 4: A RRP planar robot.\n                                                                   P\n\n                                                                   x0\n\n                                                                                             [180 minutes, open books]\n\n\n                                                                   2"}, "12b_StaticsForceTransformations": {"12": "                            Force manipulability\nn   in a given configuration, evaluate how effective is the\n    transformation between joint torques and end-effector forces\n    n    “how easily” can the end-effector apply generalized forces (or balance\n         applied ones) in the various directions of the task space\n    n    in singular configurations, there are directions in the task space where\n         external forces are balanced without the need of any joint torque\nn   we consider all end-effector forces that can be applied (or\n    balanced) by choosing joint torque vectors of unit norm\n\n                  !                                !      !\n                𝜏 𝜏=1                           𝐹 𝐽𝐽 𝐹 =1\n         same directions of the principal\n                                                   task force\n        axes of the velocity ellipsoid, but\n        with semi-axes of inverse lengths     manipulability ellipsoid\nRobotics 1                                                                        12"}, "10_InverseKinematics": {"3": "                       Inverse kinematics problem\n n given a desired end-effector pose (position +\n   orientation), find values of the joint variables 𝑞\n   that will realize it\n n a synthesis problem, with input data in the form\n          𝑅                𝑝\n      §𝑇= $                  = %𝐴& (𝑞) § 𝑟 = 𝑓( (𝑞), for a task function\n          0                1\n                classical formulation:                             generalized formulation:\n  inverse kinematics for a given end-effector pose 𝑇 inverse kinematics for a given value 𝑟 of task variables\n\n n   a typical nonlinear problem\n      n   existence of a solution (workspace definition)\n      n uniqueness/multiplicity of solutions (𝑟 ∈ ℝ' , 𝑞 ∈ ℝ& )\n      n solution methods\n\nRobotics 1                                                                                                  3"}, "Robotics1_15.02.06": {"2": "Exercise 2\n\nGiven the two points\n                              \u0012        \u0013                           \u0012           \u0013\n                                  −3                                   0.732\n                         A=                [m]    and      B=                      [m]\n                                   0                                     1\n\non the plane, connect them with the arc (of minimum length) of a circle having radius R = 2 [m]\nand parametrize this path by its arc length s. Design a timing law s = s(t) with trapezoidal speed\nprofile so as to obtain a rest-to-rest circular trajectory p(t) from A to B that performs the transfer\nin minimum time T under the maximum velocity and acceleration constraints\n\n                         kṗ(t)k ≤ Vmax ,        kp̈(t)k ≤ Amax ,        t ∈ [0, T ],\n\nand the bound on the normal acceleration p̈n (t) to the path\n\n                                  kp̈n (t)k ≤ An,max ,         t ∈ [0, T ].\n\nSolve this Cartesian trajectory planning problem with the data\n\n                   Vmax = 3 [m/s],         Amax = 4 [m/s2 ],         An,max = 2 [m/s2 ],\n\nproviding also the numerical values of the associated minimum time T .\n\n                                                                               [180 minutes; open books]\n\n\n\n\n                                                     2"}, "Robotics1_26.07.13": {"2": "Exercise 2\nDetermine a polynomial joint trajectory q(t) that realizes a coordinated motion in minimum time T\nof two robot joints from q(0) = (0, −π/2) to q(T ) = (π/4, π/4) [rad], with boundary conditions\nq̇(0) = q̈(0) = q̇(T ) = q̈(T ) = 0 and under the acceleration bounds\n\n                 |q̈1 (t)| ≤ A1 = 6   |q̈2 (t)| ≤ A2 = 10 [rad/s2 ]   for t ∈ [0, T ].\n\nProvide the minimum time T and the maximum absolute velocities reached by the two joints, i.e.\nVi = maxt∈[0.T ] |q̇i (t)|, for i = 1, 2. Sketch (at least) the joint acceleration profiles.\n\n                                                           [180 minutes (3 hours); open books]\n\n\n\n\n                                                  2", "1": "                                         Robotics 1\n                                          July 13, 2026\nExercise 1\nConsider the RRP spatial robot in Fig. 1. The robot has an offset at the shoulder. The base frame\nshould be placed on the ground.\n\n                               P\n\n\n\n\n                                                                      q2\n                      q3\n\n                                                        q1\n\n\n\n\n                                 Figure 1: An RRP spatial robot\na) Assign a set of frames according to the standard Denavit-Hartenberg (DH) convention so that\n   all constant DH parameters are nonnegative. Place the origin of the last DH frame at point P .\n   Draw the frames directly on the figure. Provide the corresponding table of parameters.\nb) Compute the direct kinematics p = k(q) of point P and the associated analytic Jacobian J (q)\n   in symbolic form.\nc) For the symbolic expression of the rotation matrix R = 0 R3 (q) of the last frame, solve the\n   inverse problem in terms of XYZ angles (ψ, θ, ϕ) of the RPY-type. Is it possible to encounter\n   a singular situation for this specific problem?\nd) Determine all singular configurations q s of the Jacobian J (q). For each case, evaluate the rank\n   and give a basis for the null space of J (q s ).\ne) In a singular configuration q s , provide a velocity v ∈ R3 of point P that is admissible. Find\n   then a joint velocity q̇ s ∈ R3 with minimum norm that realizes v.\nf ) For a given p = pd , determine all inverse kinematics solutions q = k−1 (pd ) in closed form,\n    taking into account the singular cases.\n\n\n                                                 1"}, "Robotics1_21.07.12": {"2": "Exercise #3\nPlan a smooth rest-to-rest trajectory using a minimal representation of the orientation by means\nof ZYX Euler angles (α, β, γ) from the initial orientation\n                                                   √    √ \n                                              0 − 22      2\n                                                           2\n\n                                    R1 =  1        0     0 \n                                                            \n                                                         √      √\n                                                          2      2\n                                                 0       2      2\n\nto the final orientation                    √                           \n                                              2          1\n                                             2           2      − 21\n                                                        √       √ \n                                  R2 = \n                                            0       − 22       − 22 ,\n                                                                     \n                                             √\n                                            − 22         1\n                                                         2      − 21\npassing through the intermediate orientation\n                                        √                √          √   \n                                            6               2\n                                           4              4     − 22\n                                         √                √     √ \n                                 Rvia = \n                                         − 46           − 42   − 22 .\n                                                                     \n                                                          √\n                                                            3\n                                          − 21            2          0\n\nIn the inverse problems, use always the solution with the ‘+’ sign when there is such an option.\nThe time durations for the two subintervals are T1 = 2.5 [s] (from R1 to Rvia ) and T2 = 1 [s] (from\nRvia to R2 ), with total motion time T = T1 + T2 . The planned orientation trajectory should be\ncontinuous up to the acceleration for all t ∈ (0, T ) (so, everywhere except at the initial and final\ninstants). At the end of the computations, sketch the time evolution of the three Euler angles\n(α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the\nplanned motion.\n\n                                                                [180 minutes (3 hours); open books]\n\n\n\n\n                                                     2", "1": "                                           Robotics 1\n                                             July 12, 2021\n\n\nExercise #1\nConsider the 4-dof spatial RRRP robot in Fig. 1. The robot has a shoulder and an elbow offset.\n\n                                                                  q4\n                                              D\n\n\n                             zw          C               q3                   P\n\n\n                                  B\n\n\n                                             q2\n                       A   q1\n                                                                                  yw\n\n                  xw\n\n                                  Figure 1: A spatial RRRP robot.\n\na) Assign a set of Denavit-Hartenberg (DH) frames and derive the associated table of parameters.\n   Place the 0-th DH frame coincident with the world frame RFw and the last DH frame with the\n   origin in P and the z axis in the approach direction. Draw all the DH frames on the robot.\n   Provide also the (approximate) values of the robot coordinates q in the shown configuration.\nb) Compute in symbolic form the direct kinematics p = f (q) for the position of the end-effector.\n   Derive the analytical Jacobian J (q) of this map.\nc) Neglect from now on the shoulder and elbow offsets (i.e., set B = D = 0). For the resulting\n   reduced Jacobian J red (q), find (at least) a singular configuration q ∗ . In such a configuration,\n   define a feasible end-effector velocity v ∗ ∈ R3 and find a joint velocity q̇ ∗ ∈ R4 that realizes it.\n\n\nExercise #2\nA robot link is actuated by a DC motor with rotor inertia Im = 1.5 · 10−4 [kgm2 ] via a double\ngearbox and a transmission shaft. An incremental encoder with N = 2000 pulses/turn is mounted\non the motor axis (without extra electronics for quadrature count). A first gearbox with reduction\nratio nr1 = 10 : 1 is placed at the motor output. This drives a long transmission shaft having\nrotational inertia It = 0.5 · 10−2 [kgm2 ]. A second gearbox is placed at the end of the shaft with a\nreduction ratio nr2 ≥ 1 which has to be defined. The final payload is the robot link, with an inertia\naround its rotation axis I` = 0.8 · 10−1 [kgm2 ]. Neglecting all dissipative effects, model this robot\njoint structure and find the value nr2 that minimizes the motor torque τm needed to accelerate\nthe link by θ̈` = a > 0. Accordingly, determine the angular resolution ∆θ` of the link position\nprovided by the encoder measurement on the motor side. For a bang-bang, rest-to-rest trajectory\nrotating the link by θ`,d = −π/4 in T = 0.5 s, find the maximum absolute value τm,max (in [Nm])\nof the torque that the motor needs to produce.\n\n\n                                                   1"}, "Robotics1_14.10.27": {"1": "                                                 Robotics I\n                                             October 27, 2014\n\nExercise 1\n\nConsider a minimal representation of the orientation of a rigid body as given by Euler angles\nφ = (α, β, γ) around the sequence of mobile axes XY Z.\n\n  a) Determine the relation\n                                                      ω = T (φ)φ̇\n     between the time derivatives of the Euler angles and the angular velocity ω of the rigid body.\n  b) Find the singularities of T (φ), and provide an example of an angular velocity vector ω that\n     cannot be represented in a singularity.\n  c) Given a rotation matrix R = {rij } ∈ SO(3), provide the analytic solution φ = (α, β, γ) to\n     the inverse representation problem out of singularities.\n\n\nExercise 2\n\nConsider a 4-dof SCARA robot, with base frame and Denavit-Hartenberg table as shown in Fig. 1.\n\n\n\n                             z0                                       i    ! i\"     ai   di    #i\n                                                                      1        0    a1    0    q1\n\n                !y0                                                   2        $\"   a2    0    q2\n\n                                                                      3        0\"   0    q3    0\n                                                 x0\n                                                                      4        0    0     0    q4\n\n\n\n                             Figure 1: A SCARA robot and its DH table\n\n\n  a) Provide the 6 × 4 geometric Jacobian of this robot in analytic form.\n  b) In the following, neglect the presence of joint limits. When the robot arm is fully stretched\n     along the x0 axis, determine, if possible, a joint velocity q̇ ∈ R4 that realizes the following\n     desired end-effector generalized velocity:\n                                    \u0001T                                    \u0001T\n                      v Td   ω Td        =   0    1   1       0   0   1             [m/s] or [rad/s].\n\n                                                                                                          \u0001T\n  c) In this configuration, does a solution exist for any desired generalized velocity v Td ω Td            ,\n     provided only that ωd,x = ωd,y = 0? And when a solution does exist, is it unique?\n\n                                                                                    [150 minutes; open books]\n\n\n                                                          1"}, "Robotics1_25.02.07_text": {"1": "                                            Robotics 1\n                                           February 7, 2025\n\nExercise 1\nFor the 6-dof robot YASKAWA Motoman UP500 shown in Fig. 1, assign the link frames and fill\nin the associated table of parameters according to the Denavit–Hartenberg (DH) convention (use\nthe extra sheet). The 0-th DH frame is placed on the floor, with the axis y 0 going inside the sheet.\nWith the robot in the configuration shown, all the axes of the DH frames that are not in the sheet\nplane should go instead outside the sheet. The origin O6 of the last DH frame is placed at the\ncenter of the final flange. Provide the numerical values of all constant DH parameters, as well as\nof the joint variables in the configuration shown in the sheet. Compute then the numerical value\nof the position of Point P specified in the sheet, when the robot is in the configuration q = 0.\n\n\n\n\n                        Figure 1: The YASKAWA Motoman UP500 robot.\n\nExercise 2\nConsider the RRP planar robot in Fig. 2, with the joint coordinates defined therein. The last\nlink is twisted by an angle ω/2 rad with respect to the second link. Derive the direct kinematics\nof the end-e!ector pose r = (p, ε) = (px , py , ε) = f (q). Solve then the inverse kinematics (IK)\nproblem in closed form, i.e., find all IK solutions q = f →1 (r) in the regular case. Next, set l1 = 1\nand l2 = 0.5 [m]. For the pose r = (1, 1, ω/4) [m,m,rad], provide the numerical values of the IK\nsolutions. Verify that this is not a singular case by analyzing the Jacobian of the direct kinematics.\n\n                                                          a\n\n                               y                 p\n                                                              q3\n\n                                                     l2\n                                                              q2\n                                      l1\n                                            q1\n                                                                    x\n\n                                   Figure 2: An RRP planar robot.\n\n                                                          1"}, "Robotics1_21.10.19": {"1": "                                           Robotics 1\n                                        October 19, 2021\n\n\nExercise #1\nConsider the 3-dof PPR robot in Fig. 1, with a jaw gripper mounted on the end effector.\n\n\n\n\n                                    Figure 1: A 3-dof PPR robot.\n\na) Assign and draw the robot frames according to the Denavit-Hartenberg (DH) convention. Place\n   the origin of frame 0 on the floor and the origin of the last frame at the center of the gripper.\n   Compile the associated table of DH parameters.\nb) Check whether the last DH frame assigned coincides in orientation with the definition of the\n   standard frame (n, s, a) attached to a jaw gripper. If not, determine the rotation matrix 3Rg\n   needed to align the two frames.\nc) Provide the expression of the direct kinematics p = f (q) between q = (q1 , q2 , q3 ) and the\n   position p = (px , py , pz ) of the center of the gripper.\nd) Derive the 3 × 3 Jacobian matrix J (q) relating q̇ to the linear velocity v = ṗ in two different\n   ways, as part of the geometric Jacobian of the robot and using differentiation w.r.t. time.\ne) Find all the singular configurations of matrix J (q). In one of such configurations q s , characterize\n   which Cartesian directions are instantaneously accessible by the robot gripper and which not.\n\nExercise #2\nFor the robot in Fig. 1, using the associated symbolic DH parameters, determine a smooth and\ncoordinated rest-to-rest joint trajectory that will move in T seconds the robot gripper from the\ninitial position pi = (a1 + a3 , 0, 0) to the final position pf = (a1 , −δ, 0), with δ > 0. Sketch a plot\nof the obtained joint trajectory q d (t) = (q1d (t), q2d (t), q3d (t)). What will be the maximum value\nof the norm of the joint velocity kq̇ d (t)k during the interval [0, T ]?\n\n                                                            [120 minutes (2 hours); open books]"}, "Robotics1_12.02.09": {"2": "                                        z0\n\n\n\n\n                                  d1\n                                                               y0\n\n\n                                       x0\n\n                                  Figure 2: A RRP (polar) robot\n\n\n   • Give the explicit expression of the 3 × 3 geometric Jacobian J (q) relating the joint velocity\n     q̇ to the linear velocity v e of the end-effector\n\n                                               v e = J (q)q̇\n\n     and discuss its singularities.\n\n\nExercise 3\n\nConsider the same robot of Exercise 2.\n\n   • Define a desired linear path pd (σ), parametrized by its actual length σ, between the initial\n     and final Cartesian points\n                                            \u0001T                             \u0001T\n                         pinit = 1 1 1         ,    pf in = −1 −1 3           .\n\n     Verify the existence of a value σ = σs at which the desired path encounters a robot singularity.\n     Determine whether or not the desired trajectory pd (σ(t)), with σ̇ > 0 at σ = σs , can be\n     perfectly realized also in that robot configuration. In case it can, provide some reasoning to\n     justify how to execute the desired trajectory; else, explain in detail why this is not possible.\n                                                                                             \u0001T\n   • Consider the same initial point pinit and a new final point pnew = −1 1 3                  , and\n     assume as desired interpolating trajectory pd (σ(t)) a linear Cartesian path with constant\n                                                                                         \u0001T\n     speed σ̇ = 1. The robot is initially in the configuration q(0) = π/3 π/2 1             . Design\n     two different kinematic control laws that exponentially drive the tracking error to zero, either\n        – by keeping the Cartesian error along z 0 constantly at zero,\n     or, respectively,\n        – by keeping the joint error on the second coordinate q2 constantly at zero.\n\n\n                                                                     [210 minutes; open books]\n\n\n                                                 2"}, "11_DifferentialKinematics": {"2": "                  Differential kinematics\nn   relations between motion (velocity) in joint space\n    and motion (linear/angular velocity) in task space\n    (e.g., Cartesian space)\nn   instantaneous velocity mappings can be obtained\n    through time differentiation of the direct kinematics\n    or in a geometric way, directly at the differential level\n    n different treatments arise for rotational quantities\n    n establish the relation between angular velocity and\n\n       n time derivative of a rotation matrix\n\n       n time derivative of the angles in a minimal representation\n\n          of orientation\nRobotics 1                                                       2", "32": "                       Kinematic singularities\nn   configurations where the Jacobian loses rank\n             ⟺ loss of instantaneous mobility of the robot end-effector\nn   for X = Z (≤ 6), they correspond to Cartesian poses at which the number\n    of solutions of the inverse kinematics problem differs from the generic case\nn   “in” a singular configuration, we cannot find any joint velocity that realizes\n    a desired end-effector velocity in some directions of the task space\nn   “close” to a singularity, large joint velocities may be needed to realize even\n    a small velocity of the end-effector in some directions of the task space\nn   finding and analyzing in advance the mobility of a robot helps in singularity\n    avoidance during trajectory planning and motion control\n      n when o = _: find the configurations Y such that det [(Y) = 0\n      n when o < _: find the configurations Y such that all o × o minors of [(Y) are\n        singular (or, equivalently, such that det [(Y)[/ (Y) = 0)\nn   finding all singular configurations of a robot with a large number of joints,\n    or the actual “distance” from a singularity, is a complex computational task\nRobotics 1                                                                        32"}, "Robotics1_18.02.05": {"1": "                                                                             Robotics I\n                                                                            February 5, 2018\nExercise 1\n\nThe Italian robot manufacturer Comau has recently put on the market two educational manipulators of\nsmall size and weight called e.Do. The version with four actuated revolute joints is shown in Fig. 1.\n\n\n                                                                  y4\n\n                                                          O4                                                                                    !\"#$%&%\n                                                                   x4                                                                           !\"#$%%'%\n\n\n                                                                                                                                                 !\"#$%%(%\n\n\n\n\n                                                 z0\n\n\n                                         O0         x0\n\n\n                                                                                                                    :WLJPÄJH[PVUZ                          Value\nFigure 1: The 4R e.Do manipulator by Comau with base and end-effector frames [left] and its\n                                                    Number of axis      4\nrelevant dimensions [right].                        Max payload         1 kg\n                                                                                                                  Max reach                                478 mm\nAssign the link frames according to the Denavit-Hartenberg (DH) convention and         complete the associated\n                                                                                   Axis 1 +/- 180 ° (38 °/sec)\ntable of parameters so that all constant parameters are non-negative. Specify also Axis 2their   numerical\n                                                                                           +/- 101 ° (38 °/sec) values.\n                                                                Stroke (Speed)\n                                                                                        3 +/- 101 ° (38 °/sec)\nDraw the frames and fill in the table directly on the extra sheet #1 providedAxis   separately.        The two DH\n                                                                                   Axis 5 +/- 104 ° (56 °/sec)\nframes 0 and 4 are already assigned and should not be modified.        Finally, write the\n                                                                Total weight\n                                                                                                DH homogeneous\n                                                                                           10,5 kg\ntransformation matrices. [Please, make clean drawings and returnRobotthe     completed sheet\n                                                                       arm weight          4,8 kg with your name\nwritten on it.]                                                 Structure material         Ixef 1022\n                                                                                                                                                           Universal external power source\n                                                                                                                  Power source\n                                                                                                                                                           with 12V power adapter\nExercise 2                                                                                                                                                 1 external USB port\n                                                               Connectivity                                                                                1 RJ45 Ethernet\nA number of statements are reported on the extra sheet #2, regarding       sensor devices for fixed-base ma-                                               1 DSub-9 Serial Port\nnipulators and related measurement issues. Check if each statement     is True or False, providing also a\n                                                               Motherboard                                                                                 Raspberry Pi running Raspbian Jessie\n                                                                                                                                                           Kinetic Kame\nvery short motivation/explanation for your answer. [Return the ROS\n                                                               completed sheet with your name on it.]\n                                                                                                                  Control Logic                            Proprietary open-source e.DO\n                                                                                                                  Additional Features                      External emergency stop button\nExercise 3\n\nDetermine the symbolic expression of the 6 × 4 geometric Jacobian J (q) for the robot in Fig. 1 (do not\nenter numerical values). Partition this matrix in blocks as\n                                                       ;OL\u0003PUMVYTH[PVU\u0003JVU[HPULK\u0003PU\u0003[OPZ\u0003IYVJO\\YL\u0003PZ\u0003Z\\WWSPLK\u0003MVY\u0003PUMVYTH[PVU\u0003VUS`\u0015\u0003*VTH\\\u0003:\u0015W\u0015(\u0015\u0003YLZLY]LZ\u0003[OL\u0003YPNO[\u0003[V\u0003HS[LY\u0003ZWLJPÄJH[PVUZ\u0003H[\u0003HU`\u0003[PTL\u0003^P[OV\\[\u0003\n                                                       notice for technical or commercial reasons.The illustration does not necessarily show the products in their standard version. Edition - 11/17 - Turin\n                                            !\n                                    J L (q)\n                         J (q) =              ,    v = J L (q)q̇,                      ω = J A (q)q̇.                                                                         (1)\n                                    J A (q)\n\n      • Find all configurations q ∗L , if any, where J L (q) loses rank.\n      • Determine the range space of all feasible angular velocities ω ∈ R3 .\n      • Find all singular configurations q ∗ of J (q), if any.\n\nChoose next a configuration q 0 where J L is full rank, and substitute all the available numerical data in\nthis matrix. Sketch this configuration and compute then a non-zero joint velocity q̇ 0 ∈ R4 such that the\nresulting linear velocity v of the robot end-effector at q 0 is identically zero.\n                                                                                  [turn for next exercise]\n\n\n                                                                                            1"}, "Robotics1_24.02.16": {"2": "Exercise 2\n\nA 3-dof cylindrical robot is shown in Fig. 2.\na) Assign the frames according to the Denavit-Hartenberg (D-H) convention, so that all constant D-H\n   parameters are non-negative. Provide the table with the corresponding parameters. The first frame\n   should be placed on the floor at the robot base and the origin of the last frame should be at point P .\n   Compute position and orientation of the end-effector frame as given by the homogeneous matrix 0 T 3 (q).\n\n\n\n\n                                                                  joint 3\n\n\n\n                                   joint 2\n                                                                            P\n\n\n                                                           joint 1\n\n\n\n\n                                     Figure 2: A 3-dof cylindrical robot.\n\nb) For a desired position pd ∈ R3 of the end-effector, find all solutions to the inverse kinematics problem.\nc) Sketch the primary workspace of this robot, when q1 ∈ [−5π/6, 5π/6], q2 ∈ [0, H], and q3 ∈ [Dmin , Dmax ],\n   with Dmin > 0. How many inverse kinematics solutions may comply with these bounds?\nd) Compute the 3×3 Jacobian matrix J (q) relating q̇ to the velocity v of point P and find its singularities.\ne) When the Jacobian is evaluated at a generic singular configuration q s , find a basis for the two subspaces\n   N (J s ) and N (J Ts ), where J s = J (q s ). Provide a physical interpretation of the vectors belonging to\n   each of these two subspaces.\n\nExercise 3\n\nConsider the following trajectory planning problem for a 2R planar robot with links of length L1 = 2 and\nL2 = 1 [m]. The robot should perform a rest-to-rest motion in a given time T = 2 s, moving its end-effector\nfrom point A = (0, 1) to point B = (3, 0) [m]. The initial direction of the end-effector motion from point A\nis specified by the tangent vector in Cartesian space dp/ds|A = (5, 0), where s is a suitable scalar that\nparametrizes the path. Similarly, the final approach direction to point B is specified by dp/ds|B = (0, −1).\na) Design a joint trajectory that solves this problem, providing the analytic expression of the various terms\n   in the complete solution and some plots that help illustrating it.\nb) Suppose now that the joint velocities are limited: |q̇1 | ≤ V1 = 2, |q̇2 | ≤ V2 = 3 [rad/s]. Verify whether\n   the trajectory that has been planned in item a) is feasible. If this is not the case, determine a convenient,\n   possibly minimum, motion time T ∗ that solves the same problem and complies also with these bounds.\n\n\n\n\n                                                       2"}, "08_EulerRPYHomogeneous": {"11": "         Use of homogeneous transformation 𝑇\n\n n   describes the relation between two reference frames\n     (relative pose = position & orientation)\n n   transforms the representation of a position vector\n     (applied vector starting from the origin of the frame)\n     from one frame to another frame\n n   it is a roto-translation operator on vectors in the three-\n     dimensional space\n                               !        #$\n n   it is always invertible       𝑇\"        = \"𝑇!\n                               !    \"          !\n n   can be composed, i.e., 𝑇\" 𝑇% =             𝑇%   ¬ note: it does\n                                                       not commute\n                                                       in general!\n\nRobotics 1                                                             11"}}</script>
+<script id="d-cov" type="application/json">{
+ "exams": {
+  "documents": 160,
+  "pages": 884,
+  "pages_with_text": 879,
+  "pages_scanned_or_empty": 5,
+  "pct_pages_readable": 99.4
+ },
+ "slides": {
+  "documents": 20,
+  "pages": 771,
+  "pages_with_text": 766,
+  "pages_scanned_or_empty": 5,
+  "pct_pages_readable": 99.4
+ },
+ "ocr_pages": 0,
+ "note": "Scanned pages are counted as unreadable and excluded from analysis. No OCR was run, so no text on those pages is claimed anywhere.",
+ "analysis": {
+  "exams_total": 160,
+  "exams_analysed": 97,
+  "exams_excluded_scanned": 2,
+  "exams_excluded_single_block_era": 27,
+  "exams_excluded_partial_sheet": 34,
+  "questions_parsed": 351,
+  "questions_total_estimate": 412,
+  "pct_questions_parsed": 85.2,
+  "scanned_pages_inside_analysed_exams": 3,
+  "failure_modes_emitted": 27,
+  "rejected_by_grounding": 0,
+  "rejected_quote_too_short": 0,
+  "rejected_quote_missing_trigger_span": 0,
+  "clauses_vetoed_by_rule_precision": 1,
+  "concepts_mapped": [
+   "actuators",
+   "dh_frames",
+   "direct_kinematics",
+   "inverse_kinematics",
+   "jacobian",
+   "kinematic_control",
+   "orientation",
+   "singularity",
+   "statics",
+   "trajectory",
+   "trajectory_cartesian"
+  ],
+  "concepts_unmapped": [],
+  "marks_model": {
+   "exam_total": 30.0,
+   "basis": "reconstructed",
+   "defines": {
+    "marks_at_risk": "Mean marks exposed per exam in which this mode appears (equal split across exercises, then across task clauses).",
+    "marks_per_exam_all": "Mean marks exposed per analysed exam, including exams that do not test this mode. Always smaller; shown for context only."
+   },
+   "note": "No document in this corpus states per-exercise points. The split is an assumption, so marks_at_risk is 'marks exposed under an equal split', not a measured quantity."
+  }
+ }
+}</script>
+<script>
+const ATLAS = JSON.parse(document.getElementById('d-atlas').textContent);
+const PAGES = JSON.parse(document.getElementById('d-pages').textContent);
+const COV   = JSON.parse(document.getElementById('d-cov').textContent);
+const A     = COV.analysis || {};
+const byId  = Object.fromEntries(ATLAS.map(e => [e.id, e]));
+
+const CONCEPT_LABEL = {
+  dh_frames:'DH frame assignment', direct_kinematics:'Direct kinematics',
+  inverse_kinematics:'Inverse kinematics', jacobian:'Differential kinematics / Jacobian',
+  singularity:'Singular configurations', statics:'Statics / force transformation',
+  orientation:'Orientation / Euler angles', trajectory:'Trajectory planning (joint space)',
+  trajectory_cartesian:'Trajectory planning (Cartesian)', kinematic_control:'Kinematic control',
+  actuators:'Actuators / transmissions'
+};
+const PALETTE = ['#6209BA','#2E6BFF','#F404FF','#FF6A2C','#0C2744','#00A3A3','#B3200B','#5FEE13'];
+const conceptColor = c => {
+  const keys = Object.keys(CONCEPT_LABEL);
+  return PALETTE[keys.indexOf(c) % PALETTE.length] || '#0C2744';
+};
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const flat = s => String(s||'').replace(/\s+/g,' ').trim();
+const pad2 = n => String(n).padStart(2,'0');
+/* "Robotics1_26.07.13 / Exercise 2 / b" -> "Exercise 2b"; numeric fallback
+   clause labels are dropped because they are not on the page. */
+const shortRef = ref => {
+  const p = String(ref || '').split(' / ').map(s => s.trim());
+  const ex = p.find(x => /^(exercise|question)\b/i.test(x)) || '';
+  const lab = p.length >= 3 ? p[p.length - 1] : '';
+  if (ex && /^[a-z]$/i.test(lab)) return ex + lab;
+  return ex || p[1] || String(ref || '');
+};
+
+/* concept order in the filter bar, by frequency in the atlas */
+const conceptCounts = {};
+ATLAS.forEach(e => { const c = e.concepts[0]; conceptCounts[c] = (conceptCounts[c]||0)+1; });
+const conceptOrder = Object.keys(conceptCounts).sort((a,b) => conceptCounts[b]-conceptCounts[a]);
+
+let filter = { q:'', concept:null };
+
+/* ------------------------------------------------------------------ index */
+function statCards(){
+  const doc = ATLAS.filter(e => e.strength === 'documented').length;
+  const thin = ATLAS.filter(e => e.exams_affected < 3).length;
+  return `
+  <div class="grid g4">
+    <div class="stat"><div class="n">${ATLAS.length}</div><div class="k">failure modes, ranked</div></div>
+    <div class="stat"><div class="n">${A.exams_analysed}<small>/${A.exams_total}</small></div>
+      <div class="k">exam papers analysed</div></div>
+    <div class="stat"><div class="n">${A.questions_parsed}</div><div class="k">task clauses parsed</div></div>
+    <div class="stat"><div class="n">${A.rejected_by_grounding}<small> rejected</small></div>
+      <div class="k">quotes that failed grounding</div></div>
+  </div>`;
+}
+
+function rowHTML(e, i){
+  const c = e.concepts[0];
+  const pct = Math.min(100, (e.marks_at_risk / 30) * 100);
+  return `
+  <button class="row" onclick="go('#/mode/${e.id}')">
+    <div class="rank">${pad2(i+1)}</div>
+    <div class="t">${esc(e.title)}
+      <span>${esc(CONCEPT_LABEL[c] || c)} · ${e.questions_affected} questions ·
+        ${e.exams_affected} exams${e.exams_affected < 3 ? ' · thin evidence' : ''}</span></div>
+    <div class="meter">
+      <div class="bar ${e.marks_at_risk >= 4 ? 'strong' : ''}"><i style="width:${pct.toFixed(1)}%"></i></div>
+      <div class="qty">${e.marks_at_risk.toFixed(2)}<small>/30</small></div>
+    </div>
+    <div style="text-align:right">
+      <span class="tag ${e.strength === 'documented' ? 'doc' : 'rec'}">
+        <span class="dot" style="background:${e.strength === 'documented' ? 'var(--lime)' : 'var(--orange)'}"></span>
+        ${e.strength}</span>
+    </div>
+  </button>`;
+}
+
+function visible(){
+  const q = filter.q.toLowerCase().trim();
+  return ATLAS.filter(e => {
+    if (filter.concept && e.concepts[0] !== filter.concept) return false;
+    if (!q) return true;
+    return (e.title + ' ' + e.trigger + ' ' + e.wrong_turn + ' ' + e.root_misconception + ' ' +
+            e.id).toLowerCase().includes(q);
+  });
+}
+
+function screenIndex(){
+  const list = visible();
+  return `
+  ${statCards()}
+  <div class="panel" style="margin-top:18px">
+    <div class="eyebrow">The atlas</div>
+    <h2>What these exams are built to catch</h2>
+    <p class="small" style="max-width:74ch">Each row is a design tell: an instruction in a past paper
+      that only makes sense if a specific error is anticipated. Ranked by
+      <b>marks at risk × questions affected</b>. Click any row for the quote it rests on.</p>
+    <div class="controls">
+      <input type="search" id="q" placeholder="Search a mode, concept or misconception…" value="${esc(filter.q)}">
+      <button class="chip ${filter.concept===null?'on':''}" onclick="setConcept(null)">All ${ATLAS.length}</button>
+      ${conceptOrder.map(c => `<button class="chip ${filter.concept===c?'on':''}"
+        onclick="setConcept('${c}')">${esc(CONCEPT_LABEL[c]||c)} ${conceptCounts[c]}</button>`).join('')}
+    </div>
+    <div class="rows">${list.length ? list.map(rowHTML).join('') :
+      `<div class="panel" style="box-shadow:none;background:rgba(255,255,255,.3)">
+         <p style="margin:0">No mode matches that filter. The atlas would rather show nothing than
+         stretch an entry to fit.</p></div>`}</div>
+  </div>`;
+}
+
+function setConcept(c){ filter.concept = c; render(); }
+function setQuery(v){ filter.q = v; }
+
+/* ----------------------------------------------------------------- detail */
+function screenMode(id){
+  const e = byId[id];
+  if (!e) return notFound();
+  const exam = e.evidence.exam, lec = e.evidence.lecture;
+  const c = e.concepts[0];
+  const pct = Math.min(100, (e.marks_at_risk / 30) * 100);
+  const others = ATLAS.filter(x => x.id !== e.id && x.concepts[0] === c).slice(0,4);
+  return `
+  <div class="grid g2">
+   <div>
+    <div class="panel">
+      <div class="eyebrow">${pad2(ATLAS.indexOf(e)+1)} of ${ATLAS.length} · ${esc(CONCEPT_LABEL[c]||c)}</div>
+      <h2>${esc(e.title)}</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px">
+        <span class="tag ${e.strength==='documented'?'doc':'rec'}">
+          <span class="dot" style="background:${e.strength==='documented'?'var(--lime)':'var(--orange)'}"></span>
+          ${e.strength}</span>
+        <span class="tag">confidence ${e.confidence}</span>
+        ${e.exams_affected < 3 ? '<span class="tag thin">thin evidence</span>' : ''}
+        <span class="tag"><span class="dot" style="background:${conceptColor(c)}"></span>${esc(e.rule_id||'')}</span>
+      </div>
+      <dl class="kv">
+        <dt>Trigger</dt><dd>${esc(e.trigger)}</dd>
+        <dt>What goes wrong</dt><dd>${esc(e.wrong_turn)}</dd>
+        <dt>Root misconception</dt><dd>${esc(e.root_misconception)}</dd>
+        <dt>Probe</dt><dd>${esc(e.probe)}</dd>
+        <dt>Correction</dt><dd>${esc(e.correction)}</dd>
+      </dl>
+    </div>
+    ${others.length ? `<div class="panel" style="padding:20px">
+      <div class="eyebrow">Also in ${esc(CONCEPT_LABEL[c]||c)}</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+      ${others.map(o => `<button class="chip" style="text-align:left"
+        onclick="go('#/mode/${o.id}')">${esc(o.title)}</button>`).join('')}
+      </div></div>` : ''}
+   </div>
+    <div>
+      <div class="panel" style="padding:20px">
+        <div class="eyebrow">Exposure</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin:8px 0 2px">
+          <div style="font-size:38px;font-weight:800;letter-spacing:-1.6px">${e.marks_at_risk.toFixed(2)}</div>
+          <div class="small">marks out of 30, per affected exam</div>
+        </div>
+        <div class="bar ${e.marks_at_risk>=4?'strong':''}" style="height:12px;margin:10px 0 14px">
+          <i style="width:${pct.toFixed(1)}%"></i></div>
+        <table>
+          <tr><td>Questions carrying it</td><td class="n">${e.questions_affected}</td></tr>
+          <tr><td>Exams where it appears</td><td class="n">${e.exams_affected}</td></tr>
+          <tr><td>Marks per analysed exam</td><td class="n">${(e.marks_per_exam_all||0).toFixed(2)}</td></tr>
+        </table>
+        <div class="note">Equal split across exercises, then across task clauses. The split is an
+          assumption; the total of 30 is corroborated by seven midterms that state points.</div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="eyebrow">Evidence</div>
+    <h2 style="font-size:20px">Two documents, two claims</h2>
+    <div class="grid g2" style="margin-top:12px">
+      <div class="evcard" style="margin:0">
+        <div class="evhead"><b>What the exam demands</b>
+          <code>${esc(exam.doc)}</code><code>${esc(exam.ref)}</code></div>
+        <p class="quote">“${esc(exam.quote)}”</p>
+        <div style="margin-top:14px"><a class="btn" href="#/evidence/${e.id}/exam">Open the page</a></div>
+      </div>
+      ${lec ? `<div class="evcard" style="margin:0">
+        <div class="evhead"><b>Where it is taught</b>
+          <code>${esc(lec.doc)}</code><code>${esc(lec.ref)}</code></div>
+        <p class="quote lecture">“${esc(lec.quote)}”</p>
+        <div style="margin-top:14px"><a class="btn ghost" href="#/evidence/${e.id}/lecture">Open the page</a></div>
+      </div>` : `<div class="evcard" style="margin:0">
+        <div class="evhead"><b>Where it is taught</b></div>
+        <p class="small">No lecture page in the corpus covers this concept.</p></div>`}
+    </div>
+  </div>
+  ${e.occurrences && e.occurrences.length > 1 ? `<div class="panel">
+    <div class="eyebrow">Other sightings</div>
+    <h3 style="margin-top:6px">The same tell in ${e.exams_affected} papers</h3>
+    <table><tr><th>Paper</th><th>Where</th><th>Quote</th></tr>
+    ${e.occurrences.map(o => `<tr><td class="mono" style="width:220px">${esc(o.doc)}</td>
+      <td style="width:120px">${esc(shortRef(o.ref))}</td>
+      <td class="small">${esc(o.quote.slice(0,180))}${o.quote.length>180?'…':''}</td></tr>`).join('')}
+    </table></div>` : ''}`;
+}
+
+/* --------------------------------------------------------------- evidence */
+function screenEvidence(id, slot){
+  const e = byId[id];
+  if (!e) return notFound();
+  const blk = e.evidence[slot];
+  if (!blk) return notFound();
+  const m = (blk.ref.match(/(\d+)\s*$/) || []);
+  const pageNo = m[1];
+  const raw = ((PAGES[blk.doc] || {})[pageNo] || '');
+  const text = flat(raw);
+  const q = flat(blk.quote);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  let body;
+  if (!text) {
+    body = `<div class="page"><span class="lead">No text layer was stored for this page.</span></div>`;
+  } else if (i < 0) {
+    body = `<div class="page"><span class="lead">The quote could not be located in the stored
+      text layer of this page. That is a bug, not a finding — the build would have refused it.</span></div>`;
+  } else {
+    body = `<div class="page"><span class="lead">…${esc(text.slice(Math.max(0,i-340), i))}</span><mark>${esc(text.slice(i, i+q.length))}</mark>${esc(text.slice(i+q.length, i+q.length+520))}…</div>`;
+  }
+  const sharing = ATLAS.filter(x => {
+    const b = x.evidence[slot];
+    return b && b.doc === blk.doc && (b.ref.match(/(\d+)\s*$/)||[])[1] === pageNo;
+  });
+  return `
+  <div class="panel">
+    <div class="eyebrow">Evidence · ${slot === 'exam' ? 'exam paper' : 'lecture deck'}</div>
+    <h2 style="font-size:21px">${esc(blk.doc)}</h2>
+    <div class="pglabel">
+      <code style="font-size:12px;background:rgba(12,39,68,.07);padding:4px 9px;border-radius:8px">
+        ${esc(blk.ref)}</code>
+      <span class="small">text layer of page ${esc(pageNo)}, whitespace collapsed</span>
+      <a class="btn ghost" style="margin-left:auto"
+         href="../data/pages/${encodeURIComponent(blk.doc)}_p${encodeURIComponent(pageNo)}.pdf"
+         target="_blank" rel="noopener">Open the page as PDF</a>
+      <a class="btn ghost" href="#/mode/${e.id}">← back to the mode</a>
+    </div>
+    ${body}
+    <div class="cite" style="margin-top:14px">
+      <b>Cited as:</b> “${esc(blk.quote)}”
+    </div>
+    <div class="note">This is the extracted text of the page, not a screenshot. Line breaks are
+      collapsed so the quoted span can be shown as one run; nothing else is changed. The build
+      verified this exact string against this exact page, or the entry would not exist.
+      <b>Open the page as PDF</b> to check the quote against the rendered page, where the text
+      layer plays no part.</div>
+  </div>
+  ${sharing.length > 1 ? `<div class="panel">
+    <div class="eyebrow">Same instrument</div>
+    <p class="small" style="max-width:76ch">This page is cited by ${sharing.length} entries. That is
+      expected — one instruction can pre-empt several errors — but it means these entries are not
+      independent evidence of each other.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      ${sharing.map(x => `<button class="chip" onclick="go('#/mode/${x.id}')">${esc(x.title)}</button>`).join('')}
+    </div></div>` : ''}`;
+}
+
+/* --------------------------------------------------------------- coverage */
+function screenCoverage(){
+  const ex = COV.exams, sl = COV.slides;
+  const documented = ATLAS.filter(e => e.strength === 'documented').length;
+  return `
+  <div class="panel">
+    <div class="eyebrow">Coverage</div>
+    <h2>What was read, what was refused, what is modelled</h2>
+    <p class="small" style="max-width:76ch">A judge should be able to see the edges of the corpus
+      without reading the code. Everything below is counted by the build, not typed by hand.</p>
+    <div class="grid g4" style="margin-top:14px">
+      <div class="stat"><div class="n">${ex.documents}</div><div class="k">exam papers on disk</div></div>
+      <div class="stat"><div class="n">${ex.pages}</div><div class="k">exam pages (${ex.pct_pages_readable}% readable)</div></div>
+      <div class="stat"><div class="n">${sl.documents}</div><div class="k">lecture decks (${sl.pages} pages)</div></div>
+      <div class="stat"><div class="n">${COV.ocr_pages}</div><div class="k">pages OCR'd</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Resolution</div>
+    <h3>What the analysis actually reached</h3>
+    <table>
+      <tr><th>Outcome</th><th>Exams</th><th>Why</th></tr>
+      <tr><td>Analysed</td><td class="n good">${A.exams_analysed}</td>
+        <td class="small">Segment into two or more exercises, so marks can be spread across questions</td></tr>
+      <tr><td>Excluded — single-block era</td><td class="n">${A.exams_excluded_single_block_era}</td>
+        <td class="small">Pre-2013 papers are one undivided block; there are no per-question units to rank</td></tr>
+      <tr><td>Excluded — partial sheet</td><td class="n">${A.exams_excluded_partial_sheet}</td>
+        <td class="small">Extra sheets, data sheets and answer keys are fragments of a paper, not a paper</td></tr>
+      <tr><td>Excluded — unreadable</td><td class="n">${A.exams_excluded_scanned}</td>
+        <td class="small">No text layer at all; nothing is claimed from these pages</td></tr>
+      <tr><td>Questions parsed</td><td class="n">${A.questions_parsed}</td>
+        <td class="small">${A.pct_questions_parsed}% of the estimated total task clauses</td></tr>
+    </table>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel">
+      <div class="eyebrow">The guardrail</div>
+      <h3>Two validators, run on every build</h3>
+      <table>
+        <tr><th>Validator</th><th>Question</th><th>Rejected</th></tr>
+        <tr><td>Structural</td><td class="small">Are all required fields present, typed and in range?</td>
+          <td class="n">0</td></tr>
+        <tr><td>Grounding</td><td class="small">Does the quote occur verbatim on the cited page, after
+          whitespace normalisation?</td><td class="n">${A.rejected_by_grounding}</td></tr>
+      </table>
+      <div class="note"><b>atlas.json is only written if both pass.</b> A build that cannot support a
+        claim produces <span class="kbd">REJECTED.txt</span> instead of a shorter atlas.</div>
+      <p class="small" style="margin-top:10px">Also rejected before writing:
+        ${A.rejected_quote_missing_trigger_span} quote(s) that did not contain the rule's trigger, and
+        ${A.rejected_quote_too_short} that were too short to be evidence. Rule precision vetoes
+        dropped ${A.clauses_vetoed_by_rule_precision} clause(s) whose wording matched a pattern for the
+        wrong reason.</p>
+      <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(12,39,68,.12)">
+        <h3>Try to break it</h3>
+        <p class="small" style="margin-bottom:10px">Edit the quote below and check it against the page
+          it claims to come from. This is the same test the build runs before anything is written.</p>
+        <select id="gq-id" onchange="onQuoteTarget()"
+          style="font:inherit;font-size:12px;font-weight:600;padding:9px 12px;border-radius:12px;
+          border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.6);color:var(--ink);
+          max-width:100%;margin-bottom:8px">
+          ${ATLAS.map(x => `<option value="${x.id}">${esc(x.id)}</option>`).join('')}
+        </select>
+        <textarea id="gq-text" rows="4" spellcheck="false"
+          style="font:inherit;font-size:12.5px;line-height:1.5;width:100%;padding:12px 14px;
+          border-radius:16px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.62);
+          color:var(--ink);resize:vertical;margin-bottom:10px"></textarea>
+        <button class="btn" onclick="checkGrounding()">Check against the page</button>
+        <div id="gq-out" class="small" style="margin-top:10px;min-height:20px"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">Honesty budget</div>
+      <h3>Documented vs reconstructed</h3>
+      <table>
+        <tr><th>Strength</th><th>Entries</th></tr>
+        <tr><td><span class="tag doc">documented</span> the exam wording pre-empts the error</td>
+          <td class="n">${documented}</td></tr>
+        <tr><td><span class="tag rec">reconstructed</span> the link to student behaviour is ours</td>
+          <td class="n">${ATLAS.length - documented}</td></tr>
+      </table>
+      <p class="small" style="margin-top:10px">The second is never presented as the first. A judge who
+        disagrees with a reconstructed entry can attack the named rule in
+        <span class="kbd">atlas/rules.py</span> rather than argue with a hidden leap.</p>
+      <h3 style="margin-top:16px">Marks</h3>
+      <p class="small">${esc(A.marks_model.note)}</p>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Refusals</div>
+    <h3>Two questions this atlas will not answer</h3>
+    <table>
+      <tr><th>Question</th><th>Code</th><th>Why</th></tr>
+      <tr><td class="mono">What will students score on question 3?</td>
+        <td><span class="tag thin">NO_COHORT_DATA</span></td>
+        <td class="small">The corpus holds questions and solutions. It holds no responses, no marks,
+          no distribution. A predicted score would be invented.</td></tr>
+      <tr><td class="mono">Failure modes for a course with no material</td>
+        <td><span class="tag thin">NO_CORPUS</span></td>
+        <td class="small">With no citable document there is nothing to report, and an atlas of
+          guesses is what this project exists to avoid.</td></tr>
+    </table>
+    <p class="small" style="margin-top:10px">Both are checked before retrieval, in code, so a
+      persuasive question cannot talk the system past them.</p>
+  </div>
+
+  <div class="panel">
+    <div class="eyebrow">Limitations</div>
+    <ul>
+      <li><b>No cohort data.</b> Nothing here says what students did — only what the papers are
+        built to catch.</li>
+      <li><b>Marks are modelled.</b> Ranking is exposure under an equal split, not observed loss.</li>
+      <li><b>Rules are a reading.</b> 17 tells, each named and quotable, but another examiner could
+        read the same instruction differently.</li>
+      <li><b>Entries are not independent.</b> One sentence can pre-empt several errors, so the
+        same quote may support more than one mode.</li>
+      <li><b>Extraction artefacts.</b> Inline maths is mangled by PDF extraction, so quotes are
+        prose spans; equations are never used as evidence.</li>
+      <li><b>One course, by design.</b> The corpus was chosen so no cross-course comparison is
+        attempted.</li>
+    </ul>
+  </div>`;
+}
+
+function notFound(){
+  return `<div class="panel"><h2>Not in the atlas</h2>
+    <p>That id is not one of the ${ATLAS.length} entries. <a href="#/">Back to the index</a>.</p></div>`;
+}
+
+/* Grounding, live: the same containment test the build runs, on text the visitor
+   can edit. Demonstrates that the guardrail is a check, not a promise. */
+function onQuoteTarget(){
+  const el = document.getElementById('gq-id');
+  const t  = document.getElementById('gq-text');
+  const o  = document.getElementById('gq-out');
+  if (!el || !t) return;
+  t.value = byId[el.value].evidence.exam.quote;
+  if (o) o.innerHTML = '';
+}
+function checkGrounding(){
+  const el = document.getElementById('gq-id');
+  const t  = document.getElementById('gq-text');
+  const o  = document.getElementById('gq-out');
+  if (!el || !t || !o) return;
+  const e = byId[el.value];
+  const blk = e.evidence.exam;
+  const pageNo = (blk.ref.match(/(\d+)\s*$/) || [])[1];
+  const page = flat((PAGES[blk.doc] || {})[pageNo] || '');
+  const typed = flat(t.value);
+  if (!typed){ o.innerHTML = '<span class="bad">Empty.</span>'; return; }
+  if (!page){ o.innerHTML = '<span class="bad">No text layer stored for that page.</span>'; return; }
+  o.innerHTML = page.toLowerCase().includes(typed.toLowerCase())
+    ? `<span class="good">FOUND</span> on <b>${esc(blk.doc)}</b>, ${esc(blk.ref)}. This string would be accepted.`
+    : `<span class="bad">NOT FOUND.</span> The build would refuse this quote — it writes
+       <span class="kbd">REJECTED.txt</span> and no atlas entry.`;
+}
+
+/* ------------------------------------------------------------------ router */
+function go(hash){ location.hash = hash; }
+function route(){
+  const h = location.hash.replace(/^#\/?/, '');
+  const parts = h.split('/').filter(Boolean);
+  let html, nav = 'atlas';
+  if (!parts.length) html = screenIndex();
+  else if (parts[0] === 'mode') html = screenMode(parts[1]);
+  else if (parts[0] === 'evidence') html = screenEvidence(parts[1], parts[2] === 'lecture' ? 'lecture' : 'exam');
+  else if (parts[0] === 'coverage') { html = screenCoverage(); nav = 'coverage'; }
+  else html = notFound();
+  document.getElementById('app').innerHTML = html;
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
+  if (nav === 'coverage') onQuoteTarget();
+  window.scrollTo({top:0, behavior:'instant'});
+  const q = document.getElementById('q');
+  if (q) {
+    q.addEventListener('input', ev => { setQuery(ev.target.value); renderKeepFocus(); });
+  }
+}
+
+/* Re-render the list without losing the caret in the search box. */
+function renderKeepFocus(){
+  const q = document.getElementById('q');
+  const pos = q ? q.selectionStart : 0;
+  const had = !!q;
+  route();
+  if (had) {
+    const n = document.getElementById('q');
+    if (n) { n.focus(); n.setSelectionRange(pos, pos); }
+  }
+}
+function render(){ if (document.getElementById('q')) renderKeepFocus(); else route(); }
+
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

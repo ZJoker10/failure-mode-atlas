@@ -1,0 +1,15 @@
+# The corpus is third-party course material and is not redistributed.
+# Keep the manifests: they are the provenance record for every claim.
+corpus/*
+!corpus/README.md
+!corpus/_fetch_log.json
+!corpus/_audit.json
+
+# build cache
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+
+# a refused build is a local diagnostic, not an artefact
+data/REJECTED.txt

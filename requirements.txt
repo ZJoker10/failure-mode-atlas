@@ -1,0 +1,21 @@
+# No Python packages are required.
+#
+# The pipeline uses the standard library only: re, json, dataclasses, argparse,
+# subprocess, pathlib, unittest. This is a deliberate constraint, not an
+# oversight -- reproducibility and auditability are the point (see README,
+# "Models, libraries, custom logic").
+#
+# The only external dependency is poppler, for PDF text extraction:
+#
+#   Debian/Ubuntu:  sudo apt install poppler-utils
+#   macOS:          brew install poppler
+#   Fedora:         sudo dnf install poppler-utils
+#
+# Two binaries are used:
+#   pdftotext    PDF -> per-page text
+#   pdfinfo      page count
+#   pdfseparate  cited page -> one-page PDF (data/pages/)
+#
+# Verify:
+#   python -m atlas.cli build
+#   python -m unittest discover -s tests -v

@@ -1,0 +1,90 @@
+[
+ {
+  "id": "FM-DT-08-jacobian",
+  "title": "Justification demanded — Differential kinematics / Jacobian",
+  "doc": "Robotics1_25.02.07_text",
+  "ref": "Exercise 2, p. 1",
+  "page": 1,
+  "quote": "Verify that this is not a singular case by analyzing the Jacobian of the direct kinematics. a y p q3 l2 q2 l1 q1 x Figure",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'Verify that this is not a singular case by analyzing the Jacobian'. That is a justification demand, not a numeric check; the entry's wrong-turn (answering 'verified' without the analysis) is exactly what the clause pre-empts.",
+  "independent_source": true
+ },
+ {
+  "id": "FM-DT-17-singularity",
+  "title": "Orientation inverse singular — Singular configurations",
+  "doc": "Robotics1_21.07.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'check whether or not a representation singularity is encountered'. The demand to check for it documents that missing it is anticipated. The asin/atan2 mechanism in the entry is inference, and the entry is labelled by the exam demand.",
+  "independent_source": true
+ },
+ {
+  "id": "FM-DT-05-singularity",
+  "title": "Minimum-norm solution specified — Singular configurations",
+  "doc": "Robotics1_26.07.13",
+  "ref": "Exercise 1e, p. 1",
+  "page": 1,
+  "quote": "Find then a joint velocity q̇ s ∈ R3 with minimum norm that realizes v. f ) For a given p = pd , determine all inverse kinematics solutions q = k−1 (pd ) in closed",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'joint velocity with minimum norm that realizes v' at a singular q. Minimum-norm is stipulated verbatim, so the arbitrary-particular-solution error is pre-empted.",
+  "independent_source": true
+ },
+ {
+  "id": "FM-DT-16-jacobian",
+  "title": "Static balance requested — Differential kinematics / Jacobian",
+  "doc": "Robotics1_23.02.13",
+  "ref": "Exercise 4iii, p. 2",
+  "page": 2,
+  "quote": "all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 . Hint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 .",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'all non-zero end-effector wrenches w that are statically balanced by tau = 0'. This is a statics-through-J^T question; the entry's wrong-turn (balancing at the end-effector) is the error that makes tau=0 look impossible.",
+  "independent_source": true
+ },
+ {
+  "id": "FM-DT-02-inverse_kinematics",
+  "title": "Singular cases flagged — Inverse kinematics",
+  "doc": "Robotics1_26.07.13",
+  "ref": "Exercise 1e, p. 1",
+  "page": 1,
+  "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'determine all IK solutions in closed form, taking into account the singular cases'. The singular-cases clause is the tell. Same sentence also supports DT-06/DT-07.",
+  "independent_source": false
+ },
+ {
+  "id": "FM-DT-05-jacobian",
+  "title": "Minimum-norm solution specified — Differential kinematics / Jacobian",
+  "doc": "Robotics1_26.01.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "are infinite solutions q̇ and you choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint velocity with minimum norm that minimizes also the error norm ∥J (q)q̇",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'there are infinite solutions and you choose the one with minimum norm'. Three explicit cases (unique / infinite / none) -- the entry's error is picking an arbitrary one.",
+  "independent_source": true
+ },
+ {
+  "id": "FM-DT-17-orientation",
+  "title": "Orientation inverse singular — Orientation / Euler angles",
+  "doc": "Robotics1_21.07.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2",
+  "verdict": "hit",
+  "note": "Same sentence as FM-DT-17-singularity, read for the Euler-angle branch rather than for the Jacobian. Counted as a hit but NOT as an independent source.",
+  "independent_source": false
+ },
+ {
+  "id": "FM-DT-06-inverse_kinematics",
+  "title": "Closed form required — Inverse kinematics",
+  "doc": "Robotics1_Midterm_2025-26_25.11.21",
+  "ref": "Exercise 5b, p. 2",
+  "page": 2,
+  "quote": "For a desired r d , solve in closed form the inverse kinematics problem of this robot, assuming that joints have unlimited range. In doing so, identify the conditions for the existence and the",
+  "verdict": "hit",
+  "note": "EXAM SAYS 'solve in closed form the inverse kinematics problem'. Closed form is required verbatim, so a Newton iteration is not an acceptable answer.",
+  "independent_source": true
+ }
+]

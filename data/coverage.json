@@ -1,0 +1,57 @@
+{
+ "exams": {
+  "documents": 160,
+  "pages": 884,
+  "pages_with_text": 879,
+  "pages_scanned_or_empty": 5,
+  "pct_pages_readable": 99.4
+ },
+ "slides": {
+  "documents": 20,
+  "pages": 771,
+  "pages_with_text": 766,
+  "pages_scanned_or_empty": 5,
+  "pct_pages_readable": 99.4
+ },
+ "ocr_pages": 0,
+ "note": "Scanned pages are counted as unreadable and excluded from analysis. No OCR was run, so no text on those pages is claimed anywhere.",
+ "analysis": {
+  "exams_total": 160,
+  "exams_analysed": 97,
+  "exams_excluded_scanned": 2,
+  "exams_excluded_single_block_era": 27,
+  "exams_excluded_partial_sheet": 34,
+  "questions_parsed": 351,
+  "questions_total_estimate": 412,
+  "pct_questions_parsed": 85.2,
+  "scanned_pages_inside_analysed_exams": 3,
+  "failure_modes_emitted": 27,
+  "rejected_by_grounding": 0,
+  "rejected_quote_too_short": 0,
+  "rejected_quote_missing_trigger_span": 0,
+  "clauses_vetoed_by_rule_precision": 1,
+  "concepts_mapped": [
+   "actuators",
+   "dh_frames",
+   "direct_kinematics",
+   "inverse_kinematics",
+   "jacobian",
+   "kinematic_control",
+   "orientation",
+   "singularity",
+   "statics",
+   "trajectory",
+   "trajectory_cartesian"
+  ],
+  "concepts_unmapped": [],
+  "marks_model": {
+   "exam_total": 30.0,
+   "basis": "reconstructed",
+   "defines": {
+    "marks_at_risk": "Mean marks exposed per exam in which this mode appears (equal split across exercises, then across task clauses).",
+    "marks_per_exam_all": "Mean marks exposed per analysed exam, including exams that do not test this mode. Always smaller; shown for context only."
+   },
+   "note": "No document in this corpus states per-exercise points. The split is an assumption, so marks_at_risk is 'marks exposed under an equal split', not a measured quantity."
+  }
+ }
+}

@@ -1,0 +1,146 @@
+[
+ {
+  "id": "FM-DT-08-jacobian",
+  "slot": "exam",
+  "doc": "Robotics1_25.02.07_text",
+  "ref": "Exercise 2, p. 1",
+  "page": 1,
+  "quote": "Verify that this is not a singular case by analyzing the Jacobian of the direct kinematics. a y p q3 l2 q2 l1 q1 x Figure",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-08-jacobian",
+  "slot": "lecture",
+  "doc": "11_DifferentialKinematics",
+  "ref": "p. 2",
+  "page": 2,
+  "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-17-singularity",
+  "slot": "exam",
+  "doc": "Robotics1_21.07.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-17-singularity",
+  "slot": "lecture",
+  "doc": "11_DifferentialKinematics",
+  "ref": "p. 32",
+  "page": 32,
+  "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-05-singularity",
+  "slot": "exam",
+  "doc": "Robotics1_26.07.13",
+  "ref": "Exercise 1e, p. 1",
+  "page": 1,
+  "quote": "Find then a joint velocity q̇ s ∈ R3 with minimum norm that realizes v. f ) For a given p = pd , determine all inverse kinematics solutions q = k−1 (pd ) in closed",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-05-singularity",
+  "slot": "lecture",
+  "doc": "11_DifferentialKinematics",
+  "ref": "p. 32",
+  "page": 32,
+  "quote": "finding and analyzing in advance the mobility of a robot helps in singularity avoidance during trajectory planning and motion control",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-16-jacobian",
+  "slot": "exam",
+  "doc": "Robotics1_23.02.13",
+  "ref": "Exercise 4iii, p. 2",
+  "page": 2,
+  "quote": "all non-zero end-effector wrenches w ∈ IR6 that are statically balanced by τ = 0 ∈ IR4 . Hint: It is convenient to work by expressing the geometric Jacobian in the DH frame RF1 .",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-16-jacobian",
+  "slot": "lecture",
+  "doc": "11_DifferentialKinematics",
+  "ref": "p. 2",
+  "page": 2,
+  "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-02-inverse_kinematics",
+  "slot": "exam",
+  "doc": "Robotics1_26.07.13",
+  "ref": "Exercise 1e, p. 1",
+  "page": 1,
+  "quote": "kinematics solutions q = k−1 (pd ) in closed form, taking into account the singular cases. 1",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-02-inverse_kinematics",
+  "slot": "lecture",
+  "doc": "10_InverseKinematics",
+  "ref": "p. 3",
+  "page": 3,
+  "quote": "Inverse kinematics problem",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-05-jacobian",
+  "slot": "exam",
+  "doc": "Robotics1_26.01.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "are infinite solutions q̇ and you choose the one with minimum norm ∥q̇∥; iii) there is no solution q̇ and you choose the joint velocity with minimum norm that minimizes also the error norm ∥J (q)q̇",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-05-jacobian",
+  "slot": "lecture",
+  "doc": "11_DifferentialKinematics",
+  "ref": "p. 2",
+  "page": 2,
+  "quote": "instantaneous velocity mappings can be obtained through time differentiation of the direct kinematics or in a geometric way, directly at the differential level",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-17-orientation",
+  "slot": "exam",
+  "doc": "Robotics1_21.07.12",
+  "ref": "Exercise 3, p. 2",
+  "page": 2,
+  "quote": "angles (α(t), β(t), γ(t)) and check whether or not a representation singularity is encountered during the planned motion. [180 minutes (3 hours); open books] 2",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-17-orientation",
+  "slot": "lecture",
+  "doc": "08_EulerRPYHomogeneous",
+  "ref": "p. 11",
+  "page": 11,
+  "quote": "describes the relation between two reference frames (relative pose = position & orientation)",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-06-inverse_kinematics",
+  "slot": "exam",
+  "doc": "Robotics1_Midterm_2025-26_25.11.21",
+  "ref": "Exercise 5b, p. 2",
+  "page": 2,
+  "quote": "For a desired r d , solve in closed form the inverse kinematics problem of this robot, assuming that joints have unlimited range. In doing so, identify the conditions for the existence and the",
+  "substring_verified": true
+ },
+ {
+  "id": "FM-DT-06-inverse_kinematics",
+  "slot": "lecture",
+  "doc": "10_InverseKinematics",
+  "ref": "p. 3",
+  "page": 3,
+  "quote": "Inverse kinematics problem",
+  "substring_verified": true
+ }
+]
