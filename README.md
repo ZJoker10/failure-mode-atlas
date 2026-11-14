@@ -4,6 +4,8 @@
 
 Built for Student Tech Clash 2026, case study *AI on Campus* (Direction 1: Teaching).
 
+**Team:** Zeyad Kandil · Maxime Kerger · Berk Ateşlap · Angelica Corbalán
+
 Course: **Robotics 1**, Sapienza University of Rome, Prof. Alessandro De Luca.
 Corpus source: `http://www.diag.uniroma1.it/deluca/rob1_en.php` (recorded in the course syllabus PDF itself, p. 1).
 
