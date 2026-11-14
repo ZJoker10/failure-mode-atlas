@@ -79,7 +79,7 @@ or just **double-click `web/index.html`** in a file manager. The file is self-co
 |---|---|---|
 | You see HTML source text | You clicked `web/index.html` **on github.com**. GitHub serves repository files as text and never renders HTML. | Clone the repo and open the file locally, or run `./demo.sh` |
 | Nothing happens on double-click | No default application for `.html` | `xdg-open web/index.html`, or `./demo.sh` |
-| Blank page or unstyled text | The file was truncated while copying | Re-copy the whole 166 KB file, or `python -m atlas.view` to regenerate |
+| Blank page or unstyled text | The file was truncated while copying | Re-copy the whole 190 KB file, or `python -m atlas.view` to regenerate |
 | Page loads but links do nothing | You are looking at an old build | `python -m atlas.view` rewrites it |
 | Works locally, not over SSH | `file://` paths and `localhost` refer to the remote machine | Copy `web/index.html` to your machine and open that single file |
 
