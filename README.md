@@ -42,6 +42,9 @@ python -m atlas.cli build
 # 2. ask it something
 python -m atlas.cli ask "Why do students get DH frame signs wrong?"
 
+# 2b. the quiz, without a browser (same scorer as the page)
+python -m atlas.cli quiz --answers 0120120120
+
 # 3. human report + viewer
 python -m atlas.report          # -> data/REPORT.md
 python -m atlas.view            # -> web/index.html
@@ -85,7 +88,9 @@ The corpus itself is **not** committed (210 MB of third-party PDFs). `data/` con
 
 | Screen | Route | What it answers |
 |---|---|---|
-| Atlas index | `#/` | What are the modes, and in what order? |
+| Study-profile quiz | `#/` (landing) or `#/quiz` | What kind of studier are you, and where should you start? |
+| Quiz result | `#/quiz/<10 digits>` | A shareable profile, three entries to read first, and the caveat. |
+| Atlas index | `#/atlas` | What are the modes, and in what order? |
 | Failure-mode detail | `#/mode/<id>` | What exactly goes wrong, and where is it proven? |
 | Evidence viewer | `#/evidence/<id>/exam` | Show me the quote on the page it claims to come from. |
 | **Ask** | `#/ask` | Ask a question and get the matching entries back — or a refusal. |
@@ -100,7 +105,52 @@ The guard is not re-implemented in JavaScript. `atlas/answer.py` owns `COHORT_PA
 
 The coverage screen includes a **"Try to break it"** panel: edit a quote in the browser and check it against the page. It runs the same containment test the build runs. Delete a word and it reports `NOT FOUND` — the build would have written `REJECTED.txt` instead of that entry.
 
-All four screens the brief asks for are present. **Ask** is the fifth, and it is the one to open first when demoing, because it makes the refusal behaviour visible in five seconds.
+All four screens the brief asks for are present. Two more sit around them: **Quiz**, which is the
+landing page because it is the cheapest way in, and **Ask**, which makes the refusal behaviour
+visible in five seconds. Both are additive — `#/atlas` goes straight to the ranked index.
+
+---
+
+## The quiz — and why it is not a learning-styles test
+
+The viewer opens on a ten-question study-profile quiz. It takes under a minute, works with the
+number keys, and exists for one reason: a visitor who does not know the course needs somewhere to
+start that is not "read 27 entries".
+
+**What it measures.** Three axes, each a weighted sum over the answers:
+
+| Axis | Positive end | Negative end |
+|---|---|---|
+| Representation | figure-first | symbol-first |
+| Approach | method-first | derivation-first |
+| Warm-up | example-first | attempt-first |
+
+The profile is the nearest of four quadrants — *Sketch first, then the recipe*; *Picture first, then
+rebuild it*; *Symbols first, then the method*; *Definitions first, then derive* — plus a separate
+warm-up note. Each profile opens three entries, chosen because that habit meets an explicit warning
+in the exam wording:
+
+| Profile | Opens |
+|---|---|
+| Sketch first, then the recipe | DH frames · singular configurations · trajectory planning |
+| Picture first, then rebuild it | singular configurations · statics · orientation |
+| Symbols first, then the method | inverse kinematics · trajectory planning · DH frames |
+| Definitions first, then derive | Jacobian · orientation · inverse kinematics |
+
+**What it does not measure.** How you learn, what you will score, or which teaching would suit you.
+"Visual / auditory / kinaesthetic" has little support as a way to improve outcomes, and this corpus
+holds no student responses at all. So the quiz records only what you say you do, and the
+profile-to-entry mapping is an editorial choice labelled `reconstructed` — the same label the atlas
+puts on every other inference. The result screen says all of this in plain words, above the fold
+for the disclaimer and not buried in a footnote.
+
+**One scorer, two surfaces.** The questions, weights, profile copy and disclaimer live in
+[`atlas/quiz.py`](atlas/quiz.py). The viewer inlines that content as data and runs a five-line
+weighted sum; `python -m atlas.cli quiz` runs the Python one. Three tests keep them honest: the
+inlined payload must equal `quiz.payload()`, every one of the 3¹⁰ answer sets must land in a known
+profile with all axes inside [-1, 1], and the shipped JavaScript scorer is executed **under node**
+and compared to Python for a set of answer vectors. Answers are never sent anywhere; a finished quiz
+is encoded in the URL (`#/quiz/0120120120`) so a result can be linked.
 
 ---
 
@@ -331,8 +381,10 @@ def test_regression_bare_get_is_not_a_score_request(self):
 
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | `./demo.sh` → `http://localhost:8787/` | "27 failure modes. Most are an instruction in a past paper that only makes sense if a specific error is anticipated; two are labelled reconstructed because the link is our inference, not the wording." |
-| 0:40 | Click row 1 | "Score 232: 7.74 marks per affected exam, across 30 questions in 18 exams." |
+| 0:00 | `./demo.sh` → the quiz opens | "Thirty seconds: three axes, four profiles, no claim about how anyone learns. It is a way in, not a diagnosis." |
+| 0:35 | Answer with keys 1–3, then click a card | "The profile opens three entries. This one is DH frames, 3.16 of 30 marks per affected exam — and here is the sentence it rests on." |
+| 0:55 | *Open the atlas →* | "27 failure modes. Most are an instruction in a past paper that only makes sense if a specific error is anticipated; two are labelled reconstructed because the link is our inference, not the wording." |
+| 1:15 | Click row 1 | "Score 232: 7.74 marks per affected exam, across 30 questions in 18 exams." |
 | 1:00 | Click *Open the page as PDF* | "This is the cited page, extracted from the original file, one page. The quote is on it. Check me." |
 | 1:40 | Coverage → *Try to break it*, delete words | "It says NOT FOUND. The build refuses to publish that entry rather than publish it weakly." |
 | 2:30 | Ask → *"What will students score on question 3?"* | "Refused, in the browser, before retrieval. There is no cohort data, and the code knows that before it looks at a single entry." |
@@ -438,8 +490,9 @@ atlas/
   evidence.py   structural + grounding validators, Refusal
   build.py      orchestration, marks model, ranking, the write gate
   answer.py     the refusal guard + retrieval, shared by CLI and browser
+  quiz.py       study-profile quiz: questions, weights, profiles, caveat
   report.py     Markdown report, incl. self-validation table
-  view.py       5-screen self-contained viewer
+  view.py       self-contained viewer: quiz, atlas, ask, coverage
   cli.py        build / ask / spotcheck
 data/
   atlas.json            27 validated entries
@@ -452,14 +505,14 @@ data/
 web/index.html          generated viewer (open from disk, or `./demo.sh`)
 demo.sh                 serve the repo on localhost and open a browser
 index.html              redirect to web/index.html (only needed when served)
-tests/test_atlas.py     44 tests, stdlib unittest
+tests/test_atlas.py     53 tests, stdlib unittest
 corpus/                 not committed; see corpus/README.md
 ```
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v     # 44 tests
+python -m unittest discover -s tests -v     # 53 tests
 ```
 
-They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, parity between the CLI guard and the guard inlined in `web/index.html` (the JSON block is parsed, not grepped), and a check that the published atlas is structurally valid and still in rank order.
+They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, parity between the CLI guard and the guard inlined in `web/index.html` (the JSON block is parsed, not grepped), the quiz (payload parity, every answer set scoring in range, all four profiles reachable, recommendations resolving to real entries, and the shipped JavaScript scorer run under node against the Python one), and a check that the published atlas is structurally valid and still in rank order.

@@ -14,8 +14,11 @@ from __future__ import annotations
 
 import contextlib
 import io
+import itertools
 import json
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -346,6 +349,151 @@ class TestPublishedAtlas(unittest.TestCase):
     def test_published_entries_are_ranked_by_score(self):
         scores = [e["marks_at_risk"] * e["questions_affected"] for e in self.entries]
         self.assertEqual(scores, sorted(scores, reverse=True))
+
+
+class TestQuiz(unittest.TestCase):
+    """The quiz is content plus a weighted sum, so both can be checked outright."""
+
+    @classmethod
+    def setUpClass(cls):
+        from atlas import quiz
+
+        cls.quiz = quiz
+
+    def test_shape_is_ten_questions_of_three_options(self):
+        from atlas.quiz import QUESTIONS
+
+        self.assertEqual(len(QUESTIONS), 10)
+        for q in QUESTIONS:
+            with self.subTest(q=q["id"]):
+                self.assertTrue(q["stem"].strip())
+                self.assertEqual(len(q["options"]), 3)
+                labels = [o["label"] for o in q["options"]]
+                self.assertEqual(len(set(labels)), 3)
+
+    def test_every_axis_is_measured_from_both_sides(self):
+        from atlas.quiz import AXES, QUESTIONS
+
+        for a in AXES:
+            weights = [o["w"].get(a["id"], 0.0) for q in QUESTIONS for o in q["options"]]
+            with self.subTest(axis=a["id"]):
+                self.assertTrue(any(w > 0 for w in weights))
+                self.assertTrue(any(w < 0 for w in weights))
+                self.assertTrue(any(w == 0 for w in weights))
+
+    def test_scores_stay_in_range_for_every_answer_set(self):
+        from atlas.quiz import score
+
+        for answers in itertools.product(range(3), repeat=10):
+            for axis, value in score(answers).items():
+                if not -1.0001 <= value <= 1.0001:
+                    self.fail(f"{answers} gives {axis}={value}")
+
+    def test_every_answer_set_lands_in_a_known_profile(self):
+        from atlas.quiz import PROFILES, profile_id
+
+        seen = set()
+        for answers in itertools.product(range(3), repeat=10):
+            pid = profile_id(answers)
+            self.assertIn(pid, PROFILES)
+            seen.add(pid)
+        self.assertEqual(seen, set(PROFILES))
+
+    def test_recommendations_resolve_to_published_entries(self):
+        from atlas.quiz import PROFILES, result
+
+        atlas_path = ROOT / "data" / "atlas.json"
+        if not atlas_path.exists():
+            raise unittest.SkipTest("data/atlas.json not built yet")
+        entries = json.loads(atlas_path.read_text())
+        ids = {e["id"] for e in entries}
+        for pid in PROFILES:
+            answers = next(a for a in itertools.product(range(3), repeat=10)
+                           if self.quiz.profile_id(a) == pid)
+            with self.subTest(profile=pid):
+                recs = result(answers, entries)["recommendations"]
+                self.assertEqual(len(recs), 3)
+                for rec in recs:
+                    self.assertIn(rec["id"], ids)
+                    self.assertIn(rec["concept"], rec["concept_label"].lower().replace(" ", "_")
+                                  + "_" + rec["concept"])
+
+    def test_answers_encode_and_decode(self):
+        from atlas.quiz import decode, encode
+
+        for answers in ((0, 1, 2, 0, 1, 2, 0, 1, 2, 0), (2,) * 10):
+            with self.subTest(answers=answers):
+                self.assertEqual(decode(encode(answers)), answers)
+        for bad in ("", "0", "012012012", "01201201200", "012012012x", "3333333333"):
+            with self.subTest(bad=bad):
+                self.assertIsNone(decode(bad))
+
+    def test_neutral_answers_are_reported_as_neutral(self):
+        from atlas.quiz import NEUTRAL, result, score
+
+        answers = next(a for a in itertools.product(range(3), repeat=10)
+                       if abs(score(a)["representation"]) < NEUTRAL)
+        r = result(answers, [])
+        axis_rep = next(a for a in r["axes"] if a["id"] == "representation")
+        self.assertTrue(axis_rep["neutral"])
+        self.assertEqual(axis_rep["value"], score(answers)["representation"])
+
+    def test_viewer_inlines_the_quiz_payload(self):
+        from atlas.quiz import payload
+
+        html = ROOT / "web" / "index.html"
+        if not html.exists():
+            raise unittest.SkipTest("web/index.html not built")
+        text = html.read_text()
+        start = text.index('id="d-quiz"')
+        start = text.index(">", start) + 1
+        end = text.index("</script>", start)
+        self.assertEqual(json.loads(text[start:end]), payload())
+
+    def test_viewer_quiz_engine_matches_python_under_node(self):
+        """Run the shipped JavaScript scorer and compare it to atlas/quiz.py."""
+        from atlas import quiz
+
+        if not shutil.which("node"):
+            raise unittest.SkipTest("node not installed")
+        html = ROOT / "web" / "index.html"
+        if not html.exists():
+            raise unittest.SkipTest("web/index.html not built")
+        text = html.read_text()
+        a = text.index("/* -- quiz engine")
+        b = text.index("/* -- end quiz engine -- */")
+        engine = text[a:b]
+
+        start = text.index('id="d-quiz"')
+        start = text.index(">", start) + 1
+        payload = text[start:text.index("</script>", start)]
+
+        vectors = [
+            [0] * 10,
+            [2] * 10,
+            [1] * 10,
+            [0, 1, 2, 0, 1, 2, 0, 1, 2, 0],
+            [2, 2, 1, 1, 0, 0, 2, 2, 1, 1],
+            [1, 2, 0, 1, 2, 0, 1, 2, 0, 1],
+        ]
+        code = (
+            "const QUIZ = JSON.parse(process.argv[2]);"
+            + engine
+            + "const v = JSON.parse(process.argv[1]);"
+            + "console.log(JSON.stringify(v.map(a => ({id: quizProfileId(a), s: quizScore(a)}))));"
+        )
+        out = subprocess.run(
+            ["node", "-e", code, json.dumps(vectors), payload],
+            capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(out.returncode, 0, out.stderr)
+        js = json.loads(out.stdout)
+        for answers, got in zip(vectors, js):
+            with self.subTest(answers=answers):
+                self.assertEqual(got["id"], quiz.profile_id(answers))
+                py = quiz.score(answers)
+                for axis in py:
+                    self.assertAlmostEqual(got["s"][axis], py[axis], places=9)
 
 
 class TestAnswerParity(unittest.TestCase):

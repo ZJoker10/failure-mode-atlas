@@ -152,6 +152,46 @@ li{margin-bottom:5px}
   background:rgba(255,106,44,.08);border-radius:0 12px 12px 0;padding:10px 14px;margin:12px 0}
 .kbd{font-size:11.5px;font-weight:700;background:rgba(12,39,68,.08);padding:2px 7px;border-radius:6px}
 footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ---------- quiz ---------- */
+.quizwrap{max-width:840px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.prog{height:8px;border-radius:999px;background:rgba(12,39,68,.10);overflow:hidden;margin:12px 0 22px}
+.prog i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--violet),var(--blue));transition:width .25s ease}
+.qstem{font-size:clamp(19px,2.3vw,26px);line-height:1.28;margin:0 0 18px;letter-spacing:-.01em}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;width:100%;padding:15px 18px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.55);
+  color:var(--ink);font:inherit;font-size:14.5px;cursor:pointer;
+  transition:transform .12s,background .15s,box-shadow .15s}
+.opt:hover{background:#fff;transform:translateY(-1px);box-shadow:0 10px 24px rgba(12,39,68,.10)}
+.opt .n{flex:0 0 26px;height:26px;border-radius:9px;display:grid;place-items:center;
+  font-weight:800;font-size:12px;background:rgba(12,39,68,.08)}
+.opt:hover .n{background:var(--lime);color:var(--ink)}
+.qfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin-top:16px;flex-wrap:wrap}
+.axis{margin:14px 0}
+.axis-top{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;margin-bottom:7px}
+.axis-top b{font-size:12.5px}
+.axis-top span{color:var(--muted);font-weight:700}
+.track{position:relative;height:10px;border-radius:999px;background:rgba(12,39,68,.08)}
+.track .band{position:absolute;top:0;bottom:0;background:rgba(12,39,68,.06);
+  border-left:1px dashed rgba(12,39,68,.22);border-right:1px dashed rgba(12,39,68,.22)}
+.track .fill{position:absolute;top:0;bottom:0;border-radius:999px;
+  background:linear-gradient(90deg,var(--blue),var(--magenta))}
+.track .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:rgba(12,39,68,.32)}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;gap:10px}
+.qrec{font:inherit;color:var(--ink);text-align:left;width:100%;cursor:pointer;padding:15px 18px;
+  border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.4);
+  -webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-radius:26px}
+.qrec:hover{background:rgba(255,255,255,.62)}
+.qrec .t{font-weight:800;font-size:14.5px;margin:5px 0 0}
+.qrec .why{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.55}
+.copyrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+input.link{flex:1;min-width:240px;padding:10px 12px;border-radius:12px;
+  border:1px solid rgba(12,39,68,.15);font:inherit;font-size:12px;
+  background:rgba(255,255,255,.75);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -165,7 +205,8 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
       </div>
     </div>
     <nav id="nav">
-      <a href="#/" data-nav="atlas">Atlas</a>
+      <a href="#/quiz" data-nav="quiz">Quiz</a>
+      <a href="#/atlas" data-nav="atlas">Atlas</a>
       <a href="#/ask" data-nav="ask">Ask</a>
       <a href="#/coverage" data-nav="coverage">Coverage</a>
     </nav>
@@ -1648,11 +1689,13 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
  }
 }</script>
 <script id="d-guard" type="application/json">{"patterns": ["\\b(will|would)\\b[^?]{0,50}\\b(score|scored|pass|fail|grade)\\b", "\\bwhat\\b[^?]{0,25}\\b(score|grade|mark)s?\\b[^?]{0,20}\\b(will|would|did|do)\\b", "\\bwhat('s| is) (the |their |my )?(score|grade|mark)s?\\b", "\\bhow (well|badly)\\b[^?]{0,40}\\b(students?|they|class|cohort)\\b", "\\b(did|do|have)\\b[^?]{0,20}\\b(students?|they|class)\\b[^?]{0,40}\\b(badly|poorly|struggle|struggled)\\b", "\\bpass(ing)? rate\\b", "\\bfail(ing)? rate\\b", "\\b(how many|what percentage|what proportion)\\b[^?]{0,40}\\b(students?|candidates?)\\b[^?]{0,40}\\b(pass|fail|scored?)\\b", "\\b(grade|marks?|score) distribution\\b", "\\b(average|mean|median) (mark|score|grade)s?\\b", "\\bpredict\\b[^?]{0,40}\\b(score|outcome|performance|grade|result)\\b"], "reason": "No cohort data is present in this corpus. The exams contain questions and solutions; they contain no student responses, no marks distribution and no statistics. Any predicted score would be invented, so none is given.", "stop": ["a", "about", "an", "and", "are", "did", "do", "does", "failure", "for", "give", "how", "in", "is", "lose", "losing", "mark", "marks", "me", "mistake", "mistakes", "mode", "modes", "of", "on", "or", "please", "show", "student", "students", "tell", "that", "the", "their", "them", "these", "they", "this", "those", "to", "was", "were", "what", "which", "why", "with", "wrong"], "concept_labels": {"dh_frames": "DH frame assignment", "direct_kinematics": "Direct kinematics", "inverse_kinematics": "Inverse kinematics", "jacobian": "Differential kinematics / Jacobian", "singularity": "Singular configurations", "statics": "Statics / force transformation", "orientation": "Orientation / Euler angles", "trajectory": "Trajectory planning (joint space)", "trajectory_cartesian": "Trajectory planning (Cartesian)", "kinematic_control": "Kinematic control", "actuators": "Actuators / transmissions"}}</script>
+<script id="d-quiz" type="application/json">{"axes": [{"id": "representation", "positive": "figure-first", "negative": "symbol-first", "label": "How you represent a problem", "left": "symbols and equations", "right": "figures and geometry"}, {"id": "approach", "positive": "method-first", "negative": "derivation-first", "label": "How you attack an unseen task", "left": "derive from definitions", "right": "follow a known method"}, {"id": "warmup", "positive": "example-first", "negative": "attempt-first", "label": "How you warm up", "left": "attempt cold, then compare", "right": "study one worked example first"}], "questions": [{"id": "q1", "stem": "A robot you have never seen appears on the sheet. Your first move:", "options": [{"label": "Sketch it and mark the joint axes", "w": {"representation": 1.0}}, {"label": "Write down the given parameters symbolically", "w": {"representation": -1.0}}, {"label": "Find a similar worked example in the notes", "w": {"warmup": 1.0}}]}, {"id": "q2", "stem": "You are asked to find all singular configurations. You:", "options": [{"label": "Run the standard test: compute det J and solve", "w": {"approach": 1.0}}, {"label": "Reason about which motion the arm loses, then confirm with algebra", "w": {"approach": -1.0}}, {"label": "Re-read the slide on singularities first", "w": {"warmup": 1.0}}]}, {"id": "q3", "stem": "Halfway through a long derivation, you stop. What helps most?", "options": [{"label": "Drawing the configuration where it breaks", "w": {"representation": 1.0}}, {"label": "Rewriting the expression in a cleaner notation", "w": {"representation": -1.0}}, {"label": "Re-reading the exact wording of the question", "w": {}}]}, {"id": "q4", "stem": "Your chapter notes are mostly:", "options": [{"label": "Numbered steps and conditions", "w": {"approach": 1.0}}, {"label": "Definitions, then derivations from them", "w": {"approach": -1.0}}, {"label": "Copied worked examples", "w": {"warmup": 1.0}}]}, {"id": "q5", "stem": "Before an unseen exercise, you prefer to:", "options": [{"label": "See one full worked solution first", "w": {"warmup": 1.0}}, {"label": "Attempt it cold, then compare", "w": {"warmup": -1.0}}, {"label": "Work out what is being asked, then decide", "w": {}}]}, {"id": "q6", "stem": "A computed result disagrees with the figure. You trust:", "options": [{"label": "The figure — go back and find the geometry error", "w": {"representation": 1.0}}, {"label": "The algebra — the figure may be schematic", "w": {"representation": -1.0}}, {"label": "Neither; recompute both", "w": {}}]}, {"id": "q7", "stem": "Memorising a method without its derivation feels:", "options": [{"label": "Fine — it has to work under time pressure", "w": {"approach": 1.0}}, {"label": "Unsafe — I need to know why it works", "w": {"approach": -1.0}}, {"label": "Depends on the marks at stake", "w": {}}]}, {"id": "q8", "stem": "The most useful hour the night before:", "options": [{"label": "Re-reading worked examples and solutions", "w": {"warmup": 1.0}}, {"label": "A full paper under time, then mark it", "w": {"warmup": -1.0}}, {"label": "Reviewing formula sheets", "w": {"representation": -0.5}}]}, {"id": "q9", "stem": "You remember a result best when:", "options": [{"label": "You can picture the robot configuration", "w": {"representation": 1.0}}, {"label": "You can write the equation chain", "w": {"representation": -1.0}}, {"label": "You can explain the steps out loud", "w": {}}]}, {"id": "q10", "stem": "“Prove that this Jacobian always has full rank.” You:", "options": [{"label": "Recall the standard argument and adapt it", "w": {"approach": 1.0}}, {"label": "Build the argument from the definition of rank", "w": {"approach": -1.0}}, {"label": "Look for the theorem in the notes", "w": {"warmup": 1.0}}]}], "profiles": {"sketch_recipe": {"name": "Sketch first, then the recipe", "quadrant": "figure-first · method-first", "blurb": "You start from a drawing and you like a defined sequence of steps. On these papers that is strong on geometry and exposed exactly where the drawing is approximate and the marks sit in the algebra.", "watch": "The risk is a sketch that quietly omits an offset, and stopping at the first method that fits the problem.", "start": [["dh_frames", "You start from a drawing, so a frame that looks right and is one sign or one offset off is your natural failure — and the papers write an explicit clause against it."], ["singularity", "The lost direction is visible on your sketch. The marks are in the rank, the null space and the admissible velocity, which the drawing does not give you."], ["trajectory", "A drawn velocity profile is not a timing law. The bounds and the corner cases are where the marks are, and they are easy to skip once the picture looks right."]]}, "sketch_derive": {"name": "Picture first, then rebuild it", "quadrant": "figure-first · derivation-first", "blurb": "You reason from the picture and then rebuild the mathematics. That combination handles geometry questions well and is exposed wherever the paper wants an argument the picture cannot supply.", "watch": "Geometry gives you the answer; the paper asks for the justification. Do not let a correct sketch stand in for a proof.", "start": [["singularity", "Your geometry finds the singular configuration. The question asks for a basis of the null space and a rank, so the derivation is the deliverable."], ["statics", "Force directions are geometric, but the equilibrium argument and the transformation are algebraic, and that is where the marks are."], ["orientation", "A rotation picture does not choose the Euler branch. The inverse problem does, and it is checked."]]}, "symbol_recipe": {"name": "Symbols first, then the method", "quadrant": "symbol-first · method-first", "blurb": "You write the algebra down first and you work best from an ordered procedure. That is the fast route through these papers, and it is exposed where the procedure has branches.", "watch": "Procedures have cases. The papers award marks for the case you did not enumerate, and for the drawing you did not produce.", "start": [["inverse_kinematics", "Closed-form IK is a procedure with branches: the marks are in counting the solutions and in the singular cases, not in one successful evaluation."], ["trajectory", "Bounds, timing law, continuity up to a derivative: a checklist, and the papers put marks on the clause that gets forgotten."], ["dh_frames", "You may fill the parameter table correctly and still lose marks: several exercises require the frames drawn on the figure."]]}, "symbol_derive": {"name": "Definitions first, then derive", "quadrant": "symbol-first · derivation-first", "blurb": "You start from the definitions and build the result yourself. That is the most robust route these papers allow, and its exposure is time and enumeration: deriving one case is not the same as listing all of them.", "watch": "The paper is timed. A derivation that is correct but unfinished scores like an incorrect one, and singular cases are easy to derive past.", "start": [["jacobian", "Deriving J from the definition is your strong route. These questions ask for both the geometric and the analytic version and usually for their relation."], ["orientation", "T(φ) is a derivation-shaped object; its singularities are exactly where that derivation stops being invertible."], ["inverse_kinematics", "Deriving the solutions is not the same as enumerating them. The papers ask how many there are, and which ones survive the joint limits."]]}}, "max": {"representation": 4.5, "approach": 4.0, "warmup": 6.0}, "neutral": 0.15, "short": "Ten questions about how you study. Not a validated learning-style test: the profile records what you say you do, and the full caveat is on the result.", "warmup": {"neutral": "You mix worked examples with cold attempts. Make the ratio explicit: attempt first, then compare, even when the example is right there.", "example-first": "You prefer to see one worked solution before attempting. That is fine for calibration, but the paper will not show you one: do at least one cold attempt per topic.", "attempt-first": "You prefer attempting cold. Keep it — but read the official solution even when your answer looks right, because the marks are in the justification, not the number."}, "disclaimer": "This is not a validated learning-style instrument, and nothing here is a claim about how you learn. Visual/auditory/kinaesthetic categories have little support as a way to improve outcomes, and this corpus contains no student responses. The quiz records what you say you do; the profile-to-entry mapping is an editorial choice by the authors, labelled reconstructed, not a cohort finding.", "privacy": "Your answers are not sent anywhere and not stored on a server. They live in the URL fragment so a result can be linked; closing the tab forgets them.", "length": 10, "mapping_strength": "reconstructed"}</script>
 <script>
 const ATLAS = JSON.parse(document.getElementById('d-atlas').textContent);
 const PAGES = JSON.parse(document.getElementById('d-pages').textContent);
 const COV   = JSON.parse(document.getElementById('d-cov').textContent);
 const GUARD = JSON.parse(document.getElementById('d-guard').textContent);
+const QUIZ  = JSON.parse(document.getElementById('d-quiz').textContent);
 const A     = COV.analysis || {};
 const byId  = Object.fromEntries(ATLAS.map(e => [e.id, e]));
 
@@ -1740,6 +1783,17 @@ function screenIndex(){
   const list = visible();
   return `
   ${statCards()}
+  <div class="panel" style="margin-top:18px;display:flex;gap:18px;align-items:center;
+       justify-content:space-between;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow">New here</div>
+      <h2 style="font-size:19px;margin:6px 0 4px">Find your starting point in 60 seconds</h2>
+      <p class="small" style="margin:0;max-width:62ch">Ten questions about how you study, then three
+        entries where that habit meets an explicit warning in the exam wording. Self-report, not a
+        diagnosis.</p>
+    </div>
+    <a class="btn" href="#/quiz">Take the quiz →</a>
+  </div>
   <div class="panel" style="margin-top:18px">
     <div class="eyebrow">The atlas</div>
     <h2>What these exams are built to catch</h2>
@@ -2142,9 +2196,223 @@ function screenAsk(){
   </div>`;
 }
 
+/* -------------------------------------------------------------------- quiz */
+
+/* Answers live in memory while the quiz runs; the finished set is written into
+   the hash so a result is a link (`#/quiz/0120120120`) and nothing is stored. */
+const QANS = [];
+
+/* -- quiz engine (test_atlas.py runs this exact block under node) -- */
+function quizScore(answers){
+  const totals = {};
+  QUIZ.axes.forEach(a => { totals[a.id] = 0; });
+  answers.forEach((choice, i) => {
+    const w = QUIZ.questions[i].options[choice].w;
+    Object.keys(w).forEach(k => { totals[k] += w[k]; });
+  });
+  const out = {};
+  QUIZ.axes.forEach(a => {
+    out[a.id] = QUIZ.max[a.id] ? totals[a.id] / QUIZ.max[a.id] : 0;
+  });
+  return out;
+}
+function quizProfileId(answers){
+  const s = quizScore(answers);
+  const figure = s.representation >= 0;
+  const method = s.approach >= 0;
+  if (figure) return method ? 'sketch_recipe' : 'sketch_derive';
+  return method ? 'symbol_recipe' : 'symbol_derive';
+}
+/* -- end quiz engine -- */
+
+const quizWord = v => Math.abs(v) >= 0.5 ? 'strong'
+  : (Math.abs(v) >= QUIZ.neutral ? 'lean' : 'no strong preference');
+
+const quizWarmupKey = v => Math.abs(v) < QUIZ.neutral ? 'neutral'
+  : (v > 0 ? 'example-first' : 'attempt-first');
+
+function quizResult(answers){
+  const id = quizProfileId(answers);
+  const p = QUIZ.profiles[id];
+  const s = quizScore(answers);
+  const axes = QUIZ.axes.map(a => ({
+    ...a, value: s[a.id], neutral: Math.abs(s[a.id]) < QUIZ.neutral
+  }));
+  const recs = p.start.map(([c, why]) => {
+    const e = ATLAS.find(x => x.concepts.indexOf(c) !== -1);
+    return e ? {concept:c, concept_label: CONCEPT_LABEL[c] || c, why, e} : null;
+  }).filter(Boolean);
+  return {id, p, s, axes, recs,
+          noStrong: axes[0].neutral && axes[1].neutral};
+}
+
+function quizAxisHTML(a){
+  const v = Math.max(-1, Math.min(1, a.value));
+  const half = Math.abs(v) * 50;
+  const left = v >= 0 ? 50 : 50 - half;
+  const band = QUIZ.neutral * 50;
+  return `
+  <div class="axis">
+    <div class="axis-top"><b>${esc(a.label)}</b>
+      <span style="text-align:${a.neutral ? 'center' : (v >= 0 ? 'right' : 'left')};
+        margin-${v >= 0 ? 'left' : 'right'}:auto">${a.neutral ? 'no strong preference'
+        : quizWord(v) + ' ' + esc(v >= 0 ? a.positive : a.negative)}</span></div>
+    <div class="track">
+      <i class="band" style="left:${(50 - band).toFixed(1)}%;width:${(band * 2).toFixed(1)}%"></i>
+      <i class="fill" style="left:${left.toFixed(1)}%;width:${half.toFixed(1)}%"></i>
+      <i class="mid"></i>
+    </div>
+    <div class="ends"><span>${esc(a.left)}</span><span>${esc(a.right)}</span></div>
+  </div>`;
+}
+
+function quizRecHTML(r){
+  const e = r.e;
+  return `
+  <button class="qrec" onclick="go('#/mode/${e.id}')">
+    <div class="eyebrow">${esc(r.concept_label)} · ${e.marks_at_risk.toFixed(2)}/30 at risk ·
+      ${esc(e.strength)}</div>
+    <p class="t">${esc(e.title)}</p>
+    <p class="why">${esc(r.why)}</p>
+    <p class="small" style="margin:8px 0 0">Open the entry for the quote and the cited page →</p>
+  </button>`;
+}
+
+function screenQuiz(){
+  const step = Math.min(QANS.length, QUIZ.length - 1);
+  const q = QUIZ.questions[step];
+  const pct = (QANS.length / QUIZ.length) * 100;
+  return `
+  <div class="quizwrap">
+    <div class="panel">
+      <div class="qhead">
+        <div class="eyebrow" style="margin:0">Study profile · question ${step + 1} of ${QUIZ.length}</div>
+        <a class="small" href="#/atlas">Skip to the atlas →</a>
+      </div>
+      <div class="prog"><i style="width:${pct.toFixed(1)}%"></i></div>
+      <h2 class="qstem">${esc(q.stem)}</h2>
+      <div class="opts">
+        ${q.options.map((o, i) => `
+          <button class="opt" onclick="quizAnswer(${i})">
+            <span class="n">${i + 1}</span><span>${esc(o.label)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="qfoot">
+        <button class="btn ghost" onclick="quizBack()"
+          ${step === 0 ? 'style="visibility:hidden"' : ''}>← Back</button>
+        <span class="small">Keys 1–3 answer · ← goes back</span>
+      </div>
+    </div>
+    <p class="small" style="max-width:80ch;margin-top:12px">${esc(QUIZ.short)}</p>
+  </div>`;
+}
+
+function screenQuizResult(answers){
+  const r = quizResult(answers);
+  const url = location.href.split('#')[0] + '#/quiz/' + answers.join('');
+  return `
+  <div class="quizwrap">
+    <div class="panel">
+      <div class="eyebrow">Your study profile · mapping is reconstructed</div>
+      <h2 style="margin:6px 0 4px">${esc(r.p.name)}</h2>
+      <p class="small" style="margin:0">${esc(r.p.quadrant)}${r.noStrong
+        ? ' · neither axis is strongly set' : ''}</p>
+      <p style="max-width:76ch">${esc(r.p.blurb)}</p>
+      ${r.noStrong ? `<p class="small">Your answers are close to neutral on both axes. Read the
+        profile as a starting point, not a label.</p>` : ''}
+      ${r.axes.map(quizAxisHTML).join('')}
+      <div class="note" style="margin-top:16px"><b>What to watch:</b> ${esc(r.p.watch)}</div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Start here · three entries</div>
+      <h3 style="margin:6px 0 4px;font-size:17px">Where this habit meets an explicit exam warning</h3>
+      <p class="small">Each card is an entry in the atlas. The sentence under the title is why it is
+        here — it is not evidence about you. Click a card for the quote.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">${r.recs.map(quizRecHTML).join('')}</div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Warm-up</div>
+      <p style="margin:6px 0 0">${esc(QUIZ.warmup[quizWarmupKey(r.s.warmup)])}</p>
+    </div>
+
+    <div class="panel" style="margin-top:14px;background:rgba(255,106,44,.10);
+         border-color:rgba(255,106,44,.35)">
+      <div class="eyebrow">What this is not</div>
+      <p style="margin:6px 0">${esc(QUIZ.disclaimer)}</p>
+      <p class="small" style="margin:0">${esc(QUIZ.privacy)}</p>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Share this result</div>
+      <div class="copyrow">
+        <input class="link" id="quiz-link" readonly value="${esc(url)}">
+        <button class="btn" onclick="copyQuizLink()">Copy</button>
+      </div>
+      <div class="qfoot">
+        <button class="btn ghost" onclick="quizRetake()">Retake</button>
+        <a class="btn ghost" href="#/atlas">Open the atlas →</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function screenQuizBadLink(){
+  return `<div class="panel"><h2>That result link is not valid</h2>
+    <p>A result link is <span class="kbd">#/quiz/</span> followed by ${QUIZ.length} digits, each 0–2.
+      <a href="#/quiz">Start the quiz</a>.</p></div>`;
+}
+
+function quizAnswer(i){
+  if (QANS.length >= QUIZ.length) return;
+  QANS.push(i);
+  if (QANS.length === QUIZ.length){ location.hash = '#/quiz/' + QANS.join(''); return; }
+  render();
+}
+
+function quizBack(){
+  if (QANS.length) QANS.pop();
+  if (QANS.length) render(); else go('#/quiz');
+}
+
+function quizRetake(){
+  QANS.length = 0;
+  go('#/quiz');
+  render();
+}
+
+function copyQuizLink(){
+  const el = document.getElementById('quiz-link');
+  if (!el) return;
+  const done = () => { const b = el.parentElement.querySelector('button');
+                       if (b) b.textContent = 'Copied'; };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(el.value).then(done, () => { el.select(); });
+      return;
+    }
+  } catch (e) { /* fall through to selection */ }
+  el.select();
+}
+
+/* 1-3 answer while the quiz is showing; ← goes back. Result screens ignore keys. */
+document.addEventListener('keydown', ev => {
+  /* the landing page has no hash at all, and it is also the quiz */
+  if (location.hash && location.hash !== '#/quiz') return;
+  if (ev.target && /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)) return;
+  if (ev.key === '1' || ev.key === '2' || ev.key === '3'){
+    ev.preventDefault();
+    quizAnswer(Number(ev.key) - 1);
+  } else if (ev.key === 'ArrowLeft' || ev.key === 'Backspace'){
+    ev.preventDefault();
+    quizBack();
+  }
+});
+
 function notFound(){
   return `<div class="panel"><h2>Not in the atlas</h2>
-    <p>That id is not one of the ${ATLAS.length} entries. <a href="#/">Back to the index</a>.</p></div>`;
+    <p>That id is not one of the ${ATLAS.length} entries. <a href="#/atlas">Back to the index</a>.</p></div>`;
 }
 
 /* Grounding, live: the same containment test the build runs, on text the visitor
@@ -2181,7 +2449,21 @@ function route(){
   const h = location.hash.replace(/^#\/?/, '');
   const parts = h.split('/').filter(Boolean);
   let html, nav = 'atlas';
-  if (!parts.length) html = screenIndex();
+  if (!parts.length || parts[0] === 'quiz'){
+    nav = 'quiz';
+    if (!parts[1]){
+      if (QANS.length === QUIZ.length) html = screenQuizResult(QANS);
+      else html = screenQuiz();
+    } else if (/^[0-2]+$/.test(parts[1]) && parts[1].length === QUIZ.length){
+      const answers = parts[1].split('').map(Number);
+      QANS.length = 0;
+      answers.forEach(a => QANS.push(a));
+      html = screenQuizResult(answers);
+    } else {
+      html = screenQuizBadLink();
+    }
+  }
+  else if (parts[0] === 'atlas') html = screenIndex();
   else if (parts[0] === 'mode') html = screenMode(parts[1]);
   else if (parts[0] === 'evidence') html = screenEvidence(parts[1], parts[2] === 'lecture' ? 'lecture' : 'exam');
   else if (parts[0] === 'ask') { html = screenAsk(); nav = 'ask'; }

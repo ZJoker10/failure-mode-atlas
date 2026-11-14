@@ -4,12 +4,18 @@ The data is inlined rather than fetched so the report opens from `file://`
 without a server, and so what a judge sees is exactly the validated JSON that
 the build wrote -- there is no second data path that could drift.
 
-Four screens, hash-routed:
+Screens, hash-routed:
 
-    #/                 atlas index (ranked, filterable)
-    #/mode/<id>        one failure mode, with both evidence links
-    #/evidence/<id>/<slot>  the cited page, quote highlighted in the text layer
-    #/coverage         what was read, what was refused, what is modelled
+    #/                     study-profile quiz (landing), then
+    #/quiz/<answers>       a shareable result, e.g. #/quiz/0120120120
+    #/atlas                atlas index (ranked, filterable)
+    #/mode/<id>            one failure mode, with both evidence links
+    #/evidence/<id>/<slot> the cited page, quote highlighted in the text layer
+    #/ask                  retrieval + the cohort refusal
+    #/coverage             what was read, what was refused, what is modelled
+
+The quiz is the landing screen because it is the cheapest way into the atlas.
+Skipping it is one click, and `#/atlas` goes straight to the index.
 """
 
 from __future__ import annotations
@@ -18,6 +24,7 @@ import json
 from pathlib import Path
 
 from .answer import COHORT_PATTERNS, NO_COHORT_REASON, STOP
+from . import quiz as quiz_mod
 from .rules import CONCEPTS
 
 PAGE = r"""<!doctype html>
@@ -174,6 +181,46 @@ li{margin-bottom:5px}
   background:rgba(255,106,44,.08);border-radius:0 12px 12px 0;padding:10px 14px;margin:12px 0}
 .kbd{font-size:11.5px;font-weight:700;background:rgba(12,39,68,.08);padding:2px 7px;border-radius:6px}
 footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ---------- quiz ---------- */
+.quizwrap{max-width:840px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.prog{height:8px;border-radius:999px;background:rgba(12,39,68,.10);overflow:hidden;margin:12px 0 22px}
+.prog i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--violet),var(--blue));transition:width .25s ease}
+.qstem{font-size:clamp(19px,2.3vw,26px);line-height:1.28;margin:0 0 18px;letter-spacing:-.01em}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:14px;align-items:center;text-align:left;width:100%;padding:15px 18px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.55);
+  color:var(--ink);font:inherit;font-size:14.5px;cursor:pointer;
+  transition:transform .12s,background .15s,box-shadow .15s}
+.opt:hover{background:#fff;transform:translateY(-1px);box-shadow:0 10px 24px rgba(12,39,68,.10)}
+.opt .n{flex:0 0 26px;height:26px;border-radius:9px;display:grid;place-items:center;
+  font-weight:800;font-size:12px;background:rgba(12,39,68,.08)}
+.opt:hover .n{background:var(--lime);color:var(--ink)}
+.qfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin-top:16px;flex-wrap:wrap}
+.axis{margin:14px 0}
+.axis-top{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;margin-bottom:7px}
+.axis-top b{font-size:12.5px}
+.axis-top span{color:var(--muted);font-weight:700}
+.track{position:relative;height:10px;border-radius:999px;background:rgba(12,39,68,.08)}
+.track .band{position:absolute;top:0;bottom:0;background:rgba(12,39,68,.06);
+  border-left:1px dashed rgba(12,39,68,.22);border-right:1px dashed rgba(12,39,68,.22)}
+.track .fill{position:absolute;top:0;bottom:0;border-radius:999px;
+  background:linear-gradient(90deg,var(--blue),var(--magenta))}
+.track .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:rgba(12,39,68,.32)}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:5px;gap:10px}
+.qrec{font:inherit;color:var(--ink);text-align:left;width:100%;cursor:pointer;padding:15px 18px;
+  border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.4);
+  -webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-radius:26px}
+.qrec:hover{background:rgba(255,255,255,.62)}
+.qrec .t{font-weight:800;font-size:14.5px;margin:5px 0 0}
+.qrec .why{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.55}
+.copyrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+input.link{flex:1;min-width:240px;padding:10px 12px;border-radius:12px;
+  border:1px solid rgba(12,39,68,.15);font:inherit;font-size:12px;
+  background:rgba(255,255,255,.75);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -187,7 +234,8 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
       </div>
     </div>
     <nav id="nav">
-      <a href="#/" data-nav="atlas">Atlas</a>
+      <a href="#/quiz" data-nav="quiz">Quiz</a>
+      <a href="#/atlas" data-nav="atlas">Atlas</a>
       <a href="#/ask" data-nav="ask">Ask</a>
       <a href="#/coverage" data-nav="coverage">Coverage</a>
     </nav>
@@ -203,11 +251,13 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
 <script id="d-pages" type="application/json">__PAGES__</script>
 <script id="d-cov" type="application/json">__COV__</script>
 <script id="d-guard" type="application/json">__GUARD__</script>
+<script id="d-quiz" type="application/json">__QUIZ__</script>
 <script>
 const ATLAS = JSON.parse(document.getElementById('d-atlas').textContent);
 const PAGES = JSON.parse(document.getElementById('d-pages').textContent);
 const COV   = JSON.parse(document.getElementById('d-cov').textContent);
 const GUARD = JSON.parse(document.getElementById('d-guard').textContent);
+const QUIZ  = JSON.parse(document.getElementById('d-quiz').textContent);
 const A     = COV.analysis || {};
 const byId  = Object.fromEntries(ATLAS.map(e => [e.id, e]));
 
@@ -295,6 +345,17 @@ function screenIndex(){
   const list = visible();
   return `
   ${statCards()}
+  <div class="panel" style="margin-top:18px;display:flex;gap:18px;align-items:center;
+       justify-content:space-between;flex-wrap:wrap">
+    <div>
+      <div class="eyebrow">New here</div>
+      <h2 style="font-size:19px;margin:6px 0 4px">Find your starting point in 60 seconds</h2>
+      <p class="small" style="margin:0;max-width:62ch">Ten questions about how you study, then three
+        entries where that habit meets an explicit warning in the exam wording. Self-report, not a
+        diagnosis.</p>
+    </div>
+    <a class="btn" href="#/quiz">Take the quiz →</a>
+  </div>
   <div class="panel" style="margin-top:18px">
     <div class="eyebrow">The atlas</div>
     <h2>What these exams are built to catch</h2>
@@ -697,9 +758,223 @@ function screenAsk(){
   </div>`;
 }
 
+/* -------------------------------------------------------------------- quiz */
+
+/* Answers live in memory while the quiz runs; the finished set is written into
+   the hash so a result is a link (`#/quiz/0120120120`) and nothing is stored. */
+const QANS = [];
+
+/* -- quiz engine (test_atlas.py runs this exact block under node) -- */
+function quizScore(answers){
+  const totals = {};
+  QUIZ.axes.forEach(a => { totals[a.id] = 0; });
+  answers.forEach((choice, i) => {
+    const w = QUIZ.questions[i].options[choice].w;
+    Object.keys(w).forEach(k => { totals[k] += w[k]; });
+  });
+  const out = {};
+  QUIZ.axes.forEach(a => {
+    out[a.id] = QUIZ.max[a.id] ? totals[a.id] / QUIZ.max[a.id] : 0;
+  });
+  return out;
+}
+function quizProfileId(answers){
+  const s = quizScore(answers);
+  const figure = s.representation >= 0;
+  const method = s.approach >= 0;
+  if (figure) return method ? 'sketch_recipe' : 'sketch_derive';
+  return method ? 'symbol_recipe' : 'symbol_derive';
+}
+/* -- end quiz engine -- */
+
+const quizWord = v => Math.abs(v) >= 0.5 ? 'strong'
+  : (Math.abs(v) >= QUIZ.neutral ? 'lean' : 'no strong preference');
+
+const quizWarmupKey = v => Math.abs(v) < QUIZ.neutral ? 'neutral'
+  : (v > 0 ? 'example-first' : 'attempt-first');
+
+function quizResult(answers){
+  const id = quizProfileId(answers);
+  const p = QUIZ.profiles[id];
+  const s = quizScore(answers);
+  const axes = QUIZ.axes.map(a => ({
+    ...a, value: s[a.id], neutral: Math.abs(s[a.id]) < QUIZ.neutral
+  }));
+  const recs = p.start.map(([c, why]) => {
+    const e = ATLAS.find(x => x.concepts.indexOf(c) !== -1);
+    return e ? {concept:c, concept_label: CONCEPT_LABEL[c] || c, why, e} : null;
+  }).filter(Boolean);
+  return {id, p, s, axes, recs,
+          noStrong: axes[0].neutral && axes[1].neutral};
+}
+
+function quizAxisHTML(a){
+  const v = Math.max(-1, Math.min(1, a.value));
+  const half = Math.abs(v) * 50;
+  const left = v >= 0 ? 50 : 50 - half;
+  const band = QUIZ.neutral * 50;
+  return `
+  <div class="axis">
+    <div class="axis-top"><b>${esc(a.label)}</b>
+      <span style="text-align:${a.neutral ? 'center' : (v >= 0 ? 'right' : 'left')};
+        margin-${v >= 0 ? 'left' : 'right'}:auto">${a.neutral ? 'no strong preference'
+        : quizWord(v) + ' ' + esc(v >= 0 ? a.positive : a.negative)}</span></div>
+    <div class="track">
+      <i class="band" style="left:${(50 - band).toFixed(1)}%;width:${(band * 2).toFixed(1)}%"></i>
+      <i class="fill" style="left:${left.toFixed(1)}%;width:${half.toFixed(1)}%"></i>
+      <i class="mid"></i>
+    </div>
+    <div class="ends"><span>${esc(a.left)}</span><span>${esc(a.right)}</span></div>
+  </div>`;
+}
+
+function quizRecHTML(r){
+  const e = r.e;
+  return `
+  <button class="qrec" onclick="go('#/mode/${e.id}')">
+    <div class="eyebrow">${esc(r.concept_label)} · ${e.marks_at_risk.toFixed(2)}/30 at risk ·
+      ${esc(e.strength)}</div>
+    <p class="t">${esc(e.title)}</p>
+    <p class="why">${esc(r.why)}</p>
+    <p class="small" style="margin:8px 0 0">Open the entry for the quote and the cited page →</p>
+  </button>`;
+}
+
+function screenQuiz(){
+  const step = Math.min(QANS.length, QUIZ.length - 1);
+  const q = QUIZ.questions[step];
+  const pct = (QANS.length / QUIZ.length) * 100;
+  return `
+  <div class="quizwrap">
+    <div class="panel">
+      <div class="qhead">
+        <div class="eyebrow" style="margin:0">Study profile · question ${step + 1} of ${QUIZ.length}</div>
+        <a class="small" href="#/atlas">Skip to the atlas →</a>
+      </div>
+      <div class="prog"><i style="width:${pct.toFixed(1)}%"></i></div>
+      <h2 class="qstem">${esc(q.stem)}</h2>
+      <div class="opts">
+        ${q.options.map((o, i) => `
+          <button class="opt" onclick="quizAnswer(${i})">
+            <span class="n">${i + 1}</span><span>${esc(o.label)}</span>
+          </button>`).join('')}
+      </div>
+      <div class="qfoot">
+        <button class="btn ghost" onclick="quizBack()"
+          ${step === 0 ? 'style="visibility:hidden"' : ''}>← Back</button>
+        <span class="small">Keys 1–3 answer · ← goes back</span>
+      </div>
+    </div>
+    <p class="small" style="max-width:80ch;margin-top:12px">${esc(QUIZ.short)}</p>
+  </div>`;
+}
+
+function screenQuizResult(answers){
+  const r = quizResult(answers);
+  const url = location.href.split('#')[0] + '#/quiz/' + answers.join('');
+  return `
+  <div class="quizwrap">
+    <div class="panel">
+      <div class="eyebrow">Your study profile · mapping is reconstructed</div>
+      <h2 style="margin:6px 0 4px">${esc(r.p.name)}</h2>
+      <p class="small" style="margin:0">${esc(r.p.quadrant)}${r.noStrong
+        ? ' · neither axis is strongly set' : ''}</p>
+      <p style="max-width:76ch">${esc(r.p.blurb)}</p>
+      ${r.noStrong ? `<p class="small">Your answers are close to neutral on both axes. Read the
+        profile as a starting point, not a label.</p>` : ''}
+      ${r.axes.map(quizAxisHTML).join('')}
+      <div class="note" style="margin-top:16px"><b>What to watch:</b> ${esc(r.p.watch)}</div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Start here · three entries</div>
+      <h3 style="margin:6px 0 4px;font-size:17px">Where this habit meets an explicit exam warning</h3>
+      <p class="small">Each card is an entry in the atlas. The sentence under the title is why it is
+        here — it is not evidence about you. Click a card for the quote.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">${r.recs.map(quizRecHTML).join('')}</div>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Warm-up</div>
+      <p style="margin:6px 0 0">${esc(QUIZ.warmup[quizWarmupKey(r.s.warmup)])}</p>
+    </div>
+
+    <div class="panel" style="margin-top:14px;background:rgba(255,106,44,.10);
+         border-color:rgba(255,106,44,.35)">
+      <div class="eyebrow">What this is not</div>
+      <p style="margin:6px 0">${esc(QUIZ.disclaimer)}</p>
+      <p class="small" style="margin:0">${esc(QUIZ.privacy)}</p>
+    </div>
+
+    <div class="panel" style="margin-top:14px">
+      <div class="eyebrow">Share this result</div>
+      <div class="copyrow">
+        <input class="link" id="quiz-link" readonly value="${esc(url)}">
+        <button class="btn" onclick="copyQuizLink()">Copy</button>
+      </div>
+      <div class="qfoot">
+        <button class="btn ghost" onclick="quizRetake()">Retake</button>
+        <a class="btn ghost" href="#/atlas">Open the atlas →</a>
+      </div>
+    </div>
+  </div>`;
+}
+
+function screenQuizBadLink(){
+  return `<div class="panel"><h2>That result link is not valid</h2>
+    <p>A result link is <span class="kbd">#/quiz/</span> followed by ${QUIZ.length} digits, each 0–2.
+      <a href="#/quiz">Start the quiz</a>.</p></div>`;
+}
+
+function quizAnswer(i){
+  if (QANS.length >= QUIZ.length) return;
+  QANS.push(i);
+  if (QANS.length === QUIZ.length){ location.hash = '#/quiz/' + QANS.join(''); return; }
+  render();
+}
+
+function quizBack(){
+  if (QANS.length) QANS.pop();
+  if (QANS.length) render(); else go('#/quiz');
+}
+
+function quizRetake(){
+  QANS.length = 0;
+  go('#/quiz');
+  render();
+}
+
+function copyQuizLink(){
+  const el = document.getElementById('quiz-link');
+  if (!el) return;
+  const done = () => { const b = el.parentElement.querySelector('button');
+                       if (b) b.textContent = 'Copied'; };
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(el.value).then(done, () => { el.select(); });
+      return;
+    }
+  } catch (e) { /* fall through to selection */ }
+  el.select();
+}
+
+/* 1-3 answer while the quiz is showing; ← goes back. Result screens ignore keys. */
+document.addEventListener('keydown', ev => {
+  /* the landing page has no hash at all, and it is also the quiz */
+  if (location.hash && location.hash !== '#/quiz') return;
+  if (ev.target && /^(INPUT|TEXTAREA|SELECT)$/.test(ev.target.tagName)) return;
+  if (ev.key === '1' || ev.key === '2' || ev.key === '3'){
+    ev.preventDefault();
+    quizAnswer(Number(ev.key) - 1);
+  } else if (ev.key === 'ArrowLeft' || ev.key === 'Backspace'){
+    ev.preventDefault();
+    quizBack();
+  }
+});
+
 function notFound(){
   return `<div class="panel"><h2>Not in the atlas</h2>
-    <p>That id is not one of the ${ATLAS.length} entries. <a href="#/">Back to the index</a>.</p></div>`;
+    <p>That id is not one of the ${ATLAS.length} entries. <a href="#/atlas">Back to the index</a>.</p></div>`;
 }
 
 /* Grounding, live: the same containment test the build runs, on text the visitor
@@ -736,7 +1011,21 @@ function route(){
   const h = location.hash.replace(/^#\/?/, '');
   const parts = h.split('/').filter(Boolean);
   let html, nav = 'atlas';
-  if (!parts.length) html = screenIndex();
+  if (!parts.length || parts[0] === 'quiz'){
+    nav = 'quiz';
+    if (!parts[1]){
+      if (QANS.length === QUIZ.length) html = screenQuizResult(QANS);
+      else html = screenQuiz();
+    } else if (/^[0-2]+$/.test(parts[1]) && parts[1].length === QUIZ.length){
+      const answers = parts[1].split('').map(Number);
+      QANS.length = 0;
+      answers.forEach(a => QANS.push(a));
+      html = screenQuizResult(answers);
+    } else {
+      html = screenQuizBadLink();
+    }
+  }
+  else if (parts[0] === 'atlas') html = screenIndex();
   else if (parts[0] === 'mode') html = screenMode(parts[1]);
   else if (parts[0] === 'evidence') html = screenEvidence(parts[1], parts[2] === 'lecture' ? 'lecture' : 'exam');
   else if (parts[0] === 'ask') { html = screenAsk(); nav = 'ask'; }
@@ -793,6 +1082,10 @@ def render(out_dir: Path = Path("data"), dest: Path = Path("web/index.html")) ->
         ensure_ascii=False,
     )
 
+    # The quiz ships as data, not as a second copy of the questions: the
+    # Python module is the only place its content is written.
+    quiz = json.dumps(quiz_mod.payload(), ensure_ascii=False)
+
     # `</script>` inside a JSON string would close the tag early.
     safe = lambda s: s.replace("</", "<\\/")
     html = (
@@ -800,6 +1093,7 @@ def render(out_dir: Path = Path("data"), dest: Path = Path("web/index.html")) ->
         .replace("__PAGES__", safe(pages))
         .replace("__COV__", safe(cov))
         .replace("__GUARD__", safe(guard))
+        .replace("__QUIZ__", safe(quiz))
     )
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)

@@ -1,4 +1,4 @@
-"""CLI: build, ask, spotcheck, report.
+"""CLI: build, ask, quiz, spotcheck, report.
 
 The two refusal demos live here as real code paths, not as prompt text:
 
@@ -152,6 +152,62 @@ def cmd_ask(args) -> int:
     return 0
 
 
+def cmd_quiz(args) -> int:
+    """Print a study profile without a browser. Deterministic: same answers, same output."""
+    from . import quiz
+
+    atlas_path = Path(args.out) / "atlas.json"
+    if not atlas_path.exists():
+        print("data/atlas.json is missing. Run `python -m atlas.cli build` first.")
+        return 2
+    entries = json.loads(atlas_path.read_text())
+
+    if args.answers:
+        answers = quiz.decode(args.answers)
+        if answers is None:
+            print(f"--answers must be {len(quiz.QUESTIONS)} digits, each 0-2.")
+            return 2
+    else:
+        picked = []
+        for i, q in enumerate(quiz.QUESTIONS, 1):
+            print(f"\n{i}. {q['stem']}")
+            for j, o in enumerate(q["options"], 1):
+                print(f"   {j}) {o['label']}")
+            while True:
+                raw = input("   > ").strip()
+                if raw in ("1", "2", "3"):
+                    picked.append(int(raw) - 1)
+                    break
+                print("   Type 1, 2 or 3.")
+        answers = tuple(picked)
+
+    r = quiz.result(answers, entries)
+    if args.json:
+        print(json.dumps(r, indent=1, ensure_ascii=False))
+        return 0
+
+    print(f"\n{r['name']}  [{r['profile']}]")
+    print(f"{r['quadrant']}" + ("  (no strong preference on either axis)" if r["no_strong_preference"] else ""))
+    print()
+    for a in r["axes"]:
+        if a["neutral"]:
+            verdict = "no strong preference"
+        else:
+            side = a["positive"] if a["value"] >= 0 else a["negative"]
+            verdict = ("strong " if abs(a["value"]) >= 0.5 else "lean ") + side
+        print(f"  {a['label']:<32} {verdict}")
+    print(f"\n{r['blurb']}")
+    print(f"\nWatch: {r['watch']}")
+    print(f"\nWarm-up: {r['warmup_note']}")
+    print("\nStart here:")
+    for rec in r["recommendations"]:
+        print(f"  - {rec['title']}  [{rec['id']}]")
+        print(f"    {rec['why']}")
+    print(f"\nMapping strength: {r['mapping_strength']}. {quiz.DISCLAIMER}")
+    print(f"\nShareable: #/quiz/{r['answers']}")
+    return 0
+
+
 def cmd_spotcheck(args) -> int:
     """Draw a random sample and print everything needed to check it by hand.
 
@@ -215,6 +271,12 @@ def main(argv: list[str] | None = None) -> int:
     a.add_argument("-k", type=int, default=3)
     a.add_argument("--json", action="store_true")
     a.set_defaults(func=cmd_ask)
+
+    q = sub.add_parser("quiz", help="study-profile quiz, without a browser")
+    q.add_argument("--answers", default="", help="e.g. 0120120120 (one digit per question)")
+    q.add_argument("--out", default="data")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=cmd_quiz)
 
     s = sub.add_parser("spotcheck", help="draw a random sample for manual verification")
     s.add_argument("--corpus", default="corpus")
