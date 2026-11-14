@@ -96,13 +96,40 @@ def lines_of(raw: str) -> list[str]:
     return out
 
 
+# Glyphs a slide uses as separators, and the dots a running header leaves behind.
+# A run of text containing them is a list of fragments, not a sentence.
+DEBRIS = re.compile(r"[\u00a7\u2022\u25aa\u2023\u25e6]|\.{3,}")
+
+
 def sentences(text: str) -> list[str]:
+    """Sentence-like spans only.
+
+    A slide page has no punctuation between its bullets, so joining the page
+    turns the whole slide into one long "sentence" full of section glyphs. Those
+    read as noise in a report, and the atlas rule applies here too: an extract
+    that cannot be read proves nothing. So a candidate must look like prose,
+    which for our purposes means at least one sentence-ending mark and none of
+    the separators a slide uses.
+    """
     out = []
     for part in SENT.split(text):
         s = part.strip()
         if not 30 <= len(s) <= 340:
             continue
         if len(WORD.findall(s)) < 5:
+            continue
+        if DEBRIS.search(s) or not re.search(r"[.!?]", s):
+            continue
+        # Symbols outnumbering words means the line came from an equation, not a
+        # sentence. Printing it would put mangled maths in a study report, which
+        # is the one thing the atlas bans outright.
+        if sum(1 for c in s if c.isalpha()) / len(s) < 0.65:
+            continue
+        # "in time (< (6) = 4th order" survives the letter test but is still an
+        # equation with words around it. A quarter of the tokens being symbol-only
+        # is the line between "mentions a formula" and "is a formula".
+        tokens = s.split()
+        if sum(1 for t in tokens if not any(c.isalpha() for c in t)) / len(tokens) > 0.25:
             continue
         out.append(s)
     return out
@@ -131,14 +158,31 @@ def _render_pdf_page(path: Path, page: int, dest: Path) -> bool:
 
 RUNNING = re.compile(r"^(?:\.{2,}|page \d+|\W*$)", re.I)
 
+# A slide footer ("Robotics 1 38") and a date line are decoration that happens to
+# start with a capital. Neither is a section title.
+HEADING_NOISE = re.compile(
+    r"^(?:[A-Za-z][A-Za-z0-9 .&-]*)\s\d{1,3}$"   # course name + page number
+    r"|^(?:January|February|March|April|May|June|July|August|September|October"
+    r"|November|December)\s\d{1,2},\s\d{4}$"   # a date
+)
 
-def _heading(lines: list[str]) -> str:
-    """First line that could be a heading: short, and not a page artifact."""
+
+def _heading(lines: list[str], fallback: str = "") -> str:
+    """First line that could be a heading: short, capitalised, not a page artifact.
+
+    A continued sentence ("rotation matrix by an angle ...") starts lowercase and
+    makes a misleading title, so it is rejected and the caller's neutral label is
+    used instead.
+    """
     for line in lines:
-        if RUNNING.match(line) or len(line) > 90 or len(line.split()) < 2:
+        if RUNNING.match(line) or HEADING_NOISE.match(line):
+            continue
+        if len(line) > 90 or len(line.split()) < 2:
+            continue
+        if not line[:1].isupper():
             continue
         return line
-    return lines[0][:90] if lines else ""
+    return fallback
 
 
 def _pdf_pages(path: Path) -> tuple[list[tuple[int, str]], int, bool]:
@@ -187,7 +231,7 @@ def parse_pdf(path: Path, outdir: Path) -> dict:
         found = sentences(body)
         if not found:
             continue
-        title = _heading(ls)
+        title = _heading(ls, f"Page {number}")
         sections.append(
             {
                 "title": title,
@@ -233,7 +277,7 @@ def parse_pptx(path: Path, outdir: Path) -> dict:
             found = sentences(body)
             if not found:
                 continue
-            title = _heading(paras)
+            title = _heading(paras, f"Slide {num}")
             chars += len(body)
             sections.append(
                 {
@@ -852,7 +896,7 @@ def markdown(report: dict) -> str:
 
 
 PRINT_CSS = """
-@page{size:A4;margin:16mm}
+@page{size:A4;margin:14mm}
 body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;color:#0C2744;margin:0;
   font-size:11pt;line-height:1.5;background:#fff}
 h1{font-size:20pt;margin:0 0 4px}
@@ -860,8 +904,13 @@ h2{font-size:15pt;margin:0 0 6px}
 h3{font-size:12.5pt;margin:14px 0 4px}
 h4{font-size:11pt;margin:12px 0 3px}
 p{margin:0 0 7px}
+/* A panel is a long document section, so it must be allowed to split: keeping
+   it whole pushed a tall section to the next page and left the previous one
+   almost blank. Small units are the things that stay together. */
 .panel{border:1px solid #dfe7ef;border-radius:14px;padding:12px 14px;margin:10px 0;
-  break-inside:avoid}
+  break-inside:auto}
+.gcard,.say,.vrow,.figgrid figure{break-inside:avoid}
+h1,h2,h3,h4{break-after:avoid}
 .eyebrow{font-size:8pt;letter-spacing:.09em;text-transform:uppercase;color:#3E5D80;font-weight:700}
 .small{font-size:9pt;color:#3E5D80}
 .ref{font-size:8.5pt;color:#3E5D80;font-weight:700;white-space:nowrap}
@@ -869,7 +918,8 @@ p{margin:0 0 7px}
 .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 figure{margin:0;break-inside:avoid}
 .figgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.figgrid img{width:100%;border:1px solid #dfe7ef;border-radius:8px}
+.figgrid img{width:auto;max-width:100%;max-height:80mm;margin:0 auto;
+  border:1px solid #dfe7ef;border-radius:8px}
 figcaption{font-size:8.5pt;color:#3E5D80}
 .vrow{display:flex;gap:10px;margin:6px 0}
 .vrow .ref{min-width:64px}

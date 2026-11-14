@@ -299,11 +299,35 @@ class TestParsers(unittest.TestCase):
         if not (pdf.is_file() and shutil.which("pdftotext")):
             raise unittest.SkipTest("corpus PDF or poppler not available")
         doc = self.studio.parse(pdf, Fixture.tmp / "out-pdf")
+
+        # This deck is mostly figures and equations. Few sections and many
+        # figures is the honest parse; many sections of mangled maths is not.
+        # Both bounds are asserted so the prose filter cannot quietly empty it.
         self.assertEqual(doc["kind"], "pdf")
-        self.assertGreater(len(doc["sections"]), 5)
-        # every retained section must carry prose; empty pages are not sections
+        self.assertEqual(doc["pages"], 52)
+        self.assertGreaterEqual(len(doc["sections"]), 1)
+        self.assertGreaterEqual(len(doc["figures"]), 4)
         for s in doc["sections"]:
             self.assertTrue(s["sentences"], s["ref"])
+            for t in s["sentences"]:
+                self.assertNotIn("\u00a7", t)
+                self.assertNotRegex(t, r"\.{3,}")
+                self.assertGreaterEqual(
+                    sum(1 for c in t if c.isalpha()) / len(t), 0.65, t[:60]
+                )
+
+    def test_exam_paper_keeps_its_prose(self):
+        """The readability filter must not gut a document that is written in sentences."""
+        pdf = ROOT / "corpus" / "exams" / "Robotics1_09.06.10.pdf"
+        if not (pdf.is_file() and shutil.which("pdftotext")):
+            raise unittest.SkipTest("corpus PDF or poppler not available")
+        doc = self.studio.parse(pdf, Fixture.tmp / "out-exam")
+        self.assertGreaterEqual(len(doc["sections"]), 2)
+        longest = max(doc["sections"], key=lambda s: len(s["sentences"]))
+        self.assertGreaterEqual(len(longest["sentences"]), 3)
+        self.assertIn(" ".join(longest["sentences"])[:40], " ".join(
+            t for s in doc["sections"] for t in s["sentences"]
+        ))
 
 
 class TestReport(unittest.TestCase):
