@@ -13,3 +13,6 @@ __pycache__/
 
 # a refused build is a local diagnostic, not an artefact
 data/REJECTED.txt
+
+# Studio session state: uploaded files and extracted figures live here, never committed
+data/uploads/

@@ -45,6 +45,9 @@ python -m atlas.cli ask "Why do students get DH frame signs wrong?"
 # 2b. the quiz, without a browser (same scorer as the page)
 python -m atlas.cli quiz --answers 0120120120
 
+# 2c. or the Studio, to run the same pipeline on your own files
+./studio.sh
+
 # 3. human report + viewer
 python -m atlas.report          # -> data/REPORT.md
 python -m atlas.view            # -> web/index.html
@@ -154,6 +157,79 @@ is encoded in the URL (`#/quiz/0120120120`) so a result can be linked.
 
 ---
 
+## Studio — the same discipline, applied to your own material
+
+The atlas is one worked example on one course. **Studio** is the second mode: upload your own
+course material, and get it back in the shape you say you study in.
+
+```bash
+./studio.sh                     # http://localhost:8788/  (Ctrl-C to stop)
+```
+
+No account, no sign-in, no network call. The page is served from `127.0.0.1`, the parsing happens
+in that Python process, and the uploads live in `data/uploads/<session>/` on this machine until you
+delete them. `./studio.sh 9000` picks another port; `fuser -k 8788/tcp` frees a stale one.
+
+**The flow.** A twelve-question preference quiz (Visual / Aural / Read-write / Kinesthetic) →
+the result is saved in `localStorage` under `fma.vark.v1`, so a second visit skips the quiz →
+upload PDF, PPTX or DOCX → a report → download it as Markdown or PDF.
+
+**What tailoring actually changes.** Order and emphasis, never facts. Every edition prints the
+same extracted sentences with the same page or slide references; the preference decides what
+comes first:
+
+| Edition | Shape |
+|---|---|
+| Visual | figures first — page renders or images lifted from your own file, nothing redrawn |
+| Aural | the same sentences as a script, with the browser's own speech synthesiser |
+| Read/write | headings, dense paragraphs, definitions in reading order |
+| Kinesthetic | numbered checks over the extracted steps, with a finish tick |
+
+Each sentence appears exactly once per report: definition sentences are excluded from the key
+points and live only in the glossary block, and the Aural edition has no separate transcript
+panel duplicating its own script. The concept map is generated from term co-occurrence and is
+labelled as such — it is a reading aid, not a diagram the material contains.
+
+**What it does not do.** No model is called, so nothing is paraphrased, summarised or invented —
+every sentence in the report is a substring of your upload. It does not understand the material,
+measure difficulty, predict a mark, or claim that matching a modality raises one. A scanned PDF
+with no text layer is *flagged* rather than quietly summarised, and figures are capped rather than
+stretched.
+
+### Why VARK, and why it is still not a learning-styles claim
+
+The quiz is a preference questionnaire with an explicit caveat on the result screen: it says how
+you like material presented, not how you learn, and matching a modality is not shown to improve
+outcomes. This is the same position as the study-profile quiz above, applied to a coarser
+four-letter vocabulary that the audience already recognises. The letters never filter anything — a
+Visual report still contains every sentence the Read/write one does.
+
+One scorer, again: the questions and the caveat live in [`atlas/vark.py`](atlas/vark.py), the page
+inlines them as data, and the JavaScript tally is compared against the Python `score()` in the
+test suite. Four counters cannot drift far, but they are checked.
+
+### How the exports work
+
+Markdown and JSON are generated server-side from the same report model the page renders, so a
+download cannot disagree with the screen. PDF is the print page rendered by headless Chrome. That
+last step is the only one with an external dependency, so it tries `chromium`, `google-chrome`,
+then the Playwright headless shell, and stages the HTML **inside the session directory** — a snap
+Chromium is confined and cannot read `/tmp`, which is exactly how this failed the first time. If no
+Chrome is present the button reports it and the Markdown download still works.
+
+### Formats and their limits
+
+| Format | Read with | What survives |
+|---|---|---|
+| PDF | `pdftotext -layout`, `pdfimages`, `pdftoppm` | prose lines, embedded images; inline maths is mangled, so runs of symbols are dropped rather than shown as broken quotes |
+| PPTX | stdlib `zipfile` + `ElementTree` | slide text and pictures, one section per slide that has prose |
+| DOCX | stdlib `zipfile` + `ElementTree` | headings become numbered sections, body paragraphs, embedded images |
+
+A page or slide with no prose is not counted as a section. The counts on the page (pages, sections,
+definitions, figures) are the counts the report is built from, not an estimate.
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -218,15 +294,26 @@ graph TD
     AJ --> PGS
     CV --> WV
 
+    subgraph STUDIO["Studio — the same discipline, your own material"]
+        UP["Upload<br/>PDF · PPTX · DOCX"]
+        PRS["Parse<br/>pdftotext / OOXML<br/>figures extracted, not redrawn"]
+        AN["Analyse<br/>one report model<br/>sentences + references + glossary"]
+        ED["Four editions<br/>V · A · R · K<br/>same sentences, order changes"]
+        EX2["Exports<br/>page · Markdown · PDF"]
+    end
+
+    UP --> PRS --> AN --> ED --> EX2
+    EX2 -. "no model called;<br/>every line is a substring<br/>of the upload" .- GND
+
     classDef primary fill:#00ffff,color:#000,stroke:#080d1a
     classDef gateway fill:#ee82ff,color:#fff,stroke:#080d1a
     classDef data fill:#ff1493,color:#fff,stroke:#080d1a
     classDef external fill:#444,color:#ccc,stroke:#666
 
-    class ING,SEG,TAX,RUL primary
+    class ING,SEG,TAX,RUL,PRS,AN,ED primary
     class Q0,G1,G2,GND,STR,MRK,XRF,RANK,D1,D2,R0 gateway
-    class AJ,CV,PGS,RP,WV data
-    class EX,SL,SY external
+    class AJ,CV,PGS,RP,WV,EX2 data
+    class EX,SL,SY,UP external
 
     style INPUT fill:#080d1a,color:#00ffff,stroke:#00ffff
     style GATE0 fill:#080d1a,color:#00ffff,stroke:#00ffff
@@ -234,9 +321,11 @@ graph TD
     style TOOLS fill:#080d1a,color:#00ffff,stroke:#00ffff
     style DECISIONS fill:#080d1a,color:#00ffff,stroke:#00ffff
     style OUTPUT fill:#080d1a,color:#00ffff,stroke:#00ffff
+    style STUDIO fill:#080d1a,color:#00ffff,stroke:#00ffff
 ```
 
-**Legend.** Cyan = knowledge and transformation modules. Magenta = tools and gates that decide. Pink = stored artefacts. Grey = external corpus. Dark subgraph headers = pipeline stages.
+**Legend.** Cyan = knowledge and transformation modules. Magenta = tools and gates that decide. Pink = stored artefacts. Grey = external input. Dark subgraph headers = pipeline stages. Studio is a second entry point
+into the same idea: parse the file, build one report model, present it four ways, generate nothing.
 
 ### Input → knowledge → tools → decisions → output, in words
 
@@ -491,9 +580,14 @@ atlas/
   build.py      orchestration, marks model, ranking, the write gate
   answer.py     the refusal guard + retrieval, shared by CLI and browser
   quiz.py       study-profile quiz: questions, weights, profiles, caveat
+  vark.py       Studio preference quiz: 12 questions, four letters, caveat
+  studio.py     PDF/PPTX/DOCX -> one report model -> four presentations
+  studio_view.py  the Studio page (quiz inlined as data)
+  studio_server.py  local server: upload, analyse, export
+  theme.css     Studio design system, served at /theme.css
   report.py     Markdown report, incl. self-validation table
   view.py       self-contained viewer: quiz, atlas, ask, coverage
-  cli.py        build / ask / spotcheck
+  cli.py        build / ask / quiz / studio / spotcheck
 data/
   atlas.json            27 validated entries
   coverage.json         what was read, excluded, modelled
@@ -504,15 +598,26 @@ data/
   spotcheck_verdicts.json  manual verdicts with notes
 web/index.html          generated viewer (open from disk, or `./demo.sh`)
 demo.sh                 serve the repo on localhost and open a browser
+studio.sh               one command: the Studio on http://localhost:8788/
+data/uploads/           Studio sessions (not committed); delete to clear
 index.html              redirect to web/index.html (only needed when served)
-tests/test_atlas.py     53 tests, stdlib unittest
+tests/test_atlas.py     53 atlas tests, stdlib unittest
+tests/test_studio.py    28 Studio tests, fixtures built in the test
 corpus/                 not committed; see corpus/README.md
 ```
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v     # 53 tests
+python -m unittest discover -s tests -v     # 81 tests
 ```
 
 They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, parity between the CLI guard and the guard inlined in `web/index.html` (the JSON block is parsed, not grepped), the quiz (payload parity, every answer set scoring in range, all four profiles reachable, recommendations resolving to real entries, and the shipped JavaScript scorer run under node against the Python one), and a check that the published atlas is structurally valid and still in rank order.
+
+`tests/test_studio.py` builds its own PPTX and DOCX fixtures from minimal OOXML zips, so it needs
+neither the corpus nor Office. It covers the parsers (slide and heading sections, embedded images,
+definition labels, article stripping), the four editions (each distinguishes itself by shape,
+carries the same sentences, and prints none twice), determinism of the report model, Markdown and
+print output, and the live handler on an ephemeral port: upload, analyse, export, a second file
+joining a session, bad answers as 400, oversize uploads refused, unknown sessions as 404 and
+`..` in a media path rejected.

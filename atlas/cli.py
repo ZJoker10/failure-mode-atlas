@@ -253,6 +253,14 @@ def cmd_spotcheck(args) -> int:
     return 0 if ok == len(rows) else 1
 
 
+def cmd_studio(args) -> int:
+    """Serve the Studio page: upload material, get it back in your preference order."""
+    from .studio_server import serve
+
+    serve(args.host, args.port, open_browser=not args.no_open)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="atlas", description="Failure-Mode Atlas")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -277,6 +285,12 @@ def main(argv: list[str] | None = None) -> int:
     q.add_argument("--out", default="data")
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=cmd_quiz)
+
+    st = sub.add_parser("studio", help="local Studio page: upload material, get a report")
+    st.add_argument("--host", default="127.0.0.1")
+    st.add_argument("--port", type=int, default=8788)
+    st.add_argument("--no-open", action="store_true", help="do not open a browser")
+    st.set_defaults(func=cmd_studio)
 
     s = sub.add_parser("spotcheck", help="draw a random sample for manual verification")
     s.add_argument("--corpus", default="corpus")
