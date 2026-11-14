@@ -17,6 +17,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .answer import COHORT_PATTERNS, NO_COHORT_REASON, STOP
+from .rules import CONCEPTS
+
 PAGE = r"""<!doctype html>
 <html lang="en">
 <head>
@@ -185,6 +188,7 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
     </div>
     <nav id="nav">
       <a href="#/" data-nav="atlas">Atlas</a>
+      <a href="#/ask" data-nav="ask">Ask</a>
       <a href="#/coverage" data-nav="coverage">Coverage</a>
     </nav>
   </div>
@@ -198,10 +202,12 @@ footer{margin-top:26px;font-size:11.5px;color:var(--muted);text-align:center;lin
 <script id="d-atlas" type="application/json">__ATLAS__</script>
 <script id="d-pages" type="application/json">__PAGES__</script>
 <script id="d-cov" type="application/json">__COV__</script>
+<script id="d-guard" type="application/json">__GUARD__</script>
 <script>
 const ATLAS = JSON.parse(document.getElementById('d-atlas').textContent);
 const PAGES = JSON.parse(document.getElementById('d-pages').textContent);
 const COV   = JSON.parse(document.getElementById('d-cov').textContent);
+const GUARD = JSON.parse(document.getElementById('d-guard').textContent);
 const A     = COV.analysis || {};
 const byId  = Object.fromEntries(ATLAS.map(e => [e.id, e]));
 
@@ -561,6 +567,7 @@ function screenCoverage(){
     </table>
     <p class="small" style="margin-top:10px">Both are checked before retrieval, in code, so a
       persuasive question cannot talk the system past them.</p>
+    <p style="margin-top:12px"><a class="btn ghost" href="#/ask">Try the cohort refusal in the Ask screen →</a> <span class="small">The empty-corpus refusal is a build-time path: run <span class="kbd">ask … --corpus /tmp/empty</span>.</span></p>
   </div>
 
   <div class="panel">
@@ -578,6 +585,115 @@ function screenCoverage(){
       <li><b>One course, by design.</b> The corpus was chosen so no cross-course comparison is
         attempted.</li>
     </ul>
+  </div>`;
+}
+
+/* -------------------------------------------------------------------- ask */
+
+/* The guard, the stop list and the concept labels are inlined from
+   atlas/answer.py and atlas/rules.py at build time. There is no second copy of
+   the refusal rules in JavaScript, so the browser and the CLI cannot disagree. */
+function scoreEntry(e, terms){
+  const hay = [
+    e.title, e.trigger, e.wrong_turn, e.root_misconception,
+    e.concepts.map(c => GUARD.concept_labels[c] || c).join(' '),
+    e.rule_id || ''
+  ].join(' ').toLowerCase();
+  let n = 0;
+  terms.forEach(t => { if (hay.includes(t)) n++; });
+  return n;
+}
+
+function refusalCard(question){
+  return `
+  <div class="panel" style="background:rgba(255,106,44,.13);border-color:rgba(255,106,44,.5)">
+    <div class="eyebrow">Refused · NO_COHORT_DATA</div>
+    <h3 style="font-size:17px;margin:8px 0 6px">${esc(question)}</h3>
+    <p style="margin:0">${esc(GUARD.reason)}</p>
+    <p class="small" style="margin-top:12px">This check runs before retrieval, so the question
+      never reaches the atlas. Refusing is a result, not an error.</p>
+  </div>`;
+}
+
+function runAsk(){
+  const box = document.getElementById('ask-q');
+  const out = document.getElementById('ask-out');
+  if (!box || !out) return;
+  const q = box.value.trim();
+  if (!q){
+    out.innerHTML = `<div class="panel" style="box-shadow:none;background:rgba(255,255,255,.3)">
+      <p style="margin:0" class="small">Type a question, or pick one of the examples above.</p></div>`;
+    return;
+  }
+
+  const low = q.toLowerCase();
+  const guardHit = GUARD.patterns.find(p => { try { return new RegExp(p).test(low); } catch(e){ return false; } });
+  if (guardHit){
+    out.innerHTML = refusalCard(q);
+    return;
+  }
+
+  const terms = new Set((low.match(/[a-z]{3,}/g) || []).filter(w => !GUARD.stop.includes(w)));
+  const hits = ATLAS
+    .map(e => [scoreEntry(e, terms), e])
+    .filter(([s]) => s > 0)
+    .sort((a, b) => b[0] - a[0])
+    .slice(0, 3);
+
+  if (!hits.length){
+    out.innerHTML = `<div class="panel" style="box-shadow:none;background:rgba(255,255,255,.3)">
+      <h3 style="margin-top:0">No match in the atlas</h3>
+      <p class="small" style="margin:0">Rather than stretch an entry to fit, the atlas reports no
+        match. Covered concepts: ${Object.values(CONCEPT_LABEL).join(' · ')}.</p></div>`;
+    return;
+  }
+
+  out.innerHTML = `<div class="panel" style="padding:18px 20px">
+      <div class="eyebrow">${hits.length} match(es), ranked by marks at risk</div></div>` +
+    hits.map(([s, e]) => `
+      <button class="row" style="grid-template-columns:46px 1fr 132px 104px;margin-top:9px"
+              onclick="go('#/mode/${e.id}')">
+        <div class="rank">${s}</div>
+        <div class="t">${esc(e.title)}
+          <span>${esc(e.trigger)}</span></div>
+        <div class="meter">
+          <div class="bar ${e.marks_at_risk >= 4 ? 'strong' : ''}">
+            <i style="width:${Math.min(100,(e.marks_at_risk/30)*100).toFixed(1)}%"></i></div>
+          <div class="qty">${e.marks_at_risk.toFixed(2)}<small>/30</small></div>
+        </div>
+        <div style="text-align:right"><span class="tag ${e.strength === 'documented' ? 'doc' : 'rec'}">
+          ${e.strength}</span></div>
+      </button>
+      <div class="panel" style="padding:14px 18px;margin-top:-3px;box-shadow:none;
+           background:rgba(255,255,255,.26)">
+        <p class="quote" style="margin:0">“${esc(e.evidence.exam.quote.slice(0, 220))}${e.evidence.exam.quote.length > 220 ? '…' : ''}”</p>
+        <p class="small" style="margin:8px 0 0">${esc(e.evidence.exam.doc)} · ${esc(e.evidence.exam.ref)}</p>
+      </div>`).join('');
+}
+
+function screenAsk(){
+  const examples = [
+    'Why do students get DH frame signs wrong?',
+    'Which failure modes affect trajectory planning?',
+    'What will students score on question 3?',
+  ];
+  return `
+  <div class="panel">
+    <div class="eyebrow">Ask</div>
+    <h2>Ask the atlas a question</h2>
+    <p class="small" style="max-width:76ch">Answers are retrieved from the ${ATLAS.length} validated
+      entries by keyword overlap. Nothing is generated, so a result can only ever be an entry that
+      already passed both validators. Questions that would need data the corpus does not hold are
+      refused before retrieval starts.</p>
+    <div class="controls" style="margin-top:14px">
+      <input type="search" id="ask-q" placeholder="e.g. Why do students get DH frame signs wrong?"
+             style="flex:1;min-width:320px" onkeydown="if(event.key==='Enter'){runAsk()}">
+      <button class="btn" onclick="runAsk()">Ask</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 16px">
+      ${examples.map(x => `<button class="chip" onclick="document.getElementById('ask-q').value=${JSON.stringify(x).replace(/"/g,'&quot;')};runAsk()">${esc(x)}</button>`).join('')}
+    </div>
+    <div id="ask-out" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>`;
 }
 
@@ -623,11 +739,13 @@ function route(){
   if (!parts.length) html = screenIndex();
   else if (parts[0] === 'mode') html = screenMode(parts[1]);
   else if (parts[0] === 'evidence') html = screenEvidence(parts[1], parts[2] === 'lecture' ? 'lecture' : 'exam');
+  else if (parts[0] === 'ask') { html = screenAsk(); nav = 'ask'; }
   else if (parts[0] === 'coverage') { html = screenCoverage(); nav = 'coverage'; }
   else html = notFound();
   document.getElementById('app').innerHTML = html;
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
   if (nav === 'coverage') onQuoteTarget();
+  if (nav === 'ask') { const a = document.getElementById('ask-q'); if (a) a.focus(); }
   window.scrollTo({top:0, behavior:'instant'});
   const q = document.getElementById('q');
   if (q) {
@@ -661,12 +779,27 @@ def render(out_dir: Path = Path("data"), dest: Path = Path("web/index.html")) ->
     atlas = (out_dir / "atlas.json").read_text()
     pages = (out_dir / "evidence_pages.json").read_text()
     cov = (out_dir / "coverage.json").read_text()
+
+    # The refusal guard and the retrieval stop list are inlined from Python so
+    # the Ask screen runs exactly the rules the CLI runs, with no second copy to
+    # drift. Only the data crosses; the logic stays in atlas/answer.py.
+    guard = json.dumps(
+        {
+            "patterns": list(COHORT_PATTERNS),
+            "reason": NO_COHORT_REASON,
+            "stop": sorted(STOP),
+            "concept_labels": {k: v["label"] for k, v in CONCEPTS.items()},
+        },
+        ensure_ascii=False,
+    )
+
     # `</script>` inside a JSON string would close the tag early.
     safe = lambda s: s.replace("</", "<\\/")
     html = (
         PAGE.replace("__ATLAS__", safe(atlas))
         .replace("__PAGES__", safe(pages))
         .replace("__COV__", safe(cov))
+        .replace("__GUARD__", safe(guard))
     )
     dest = Path(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)

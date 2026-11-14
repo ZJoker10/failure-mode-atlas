@@ -21,35 +21,19 @@ from pathlib import Path
 from . import build as builder
 from . import evidence as ev
 from .ingest import load_corpus
+from .answer import (
+    NO_COHORT_REASON,
+    STOP,
+    ranked_matches,
+    score_entry,
+    terms_of,
+    wants_cohort_prediction,
+)
 from .rules import CONCEPTS, RULES_BY_ID, Rule
 
 DATA = Path("data")
 
 # --------------------------------------------------------------- refusals
-
-# Anything that asks for a prediction about students. The corpus holds exam
-# papers and solutions; it holds no responses, no marks, no cohort.
-COHORT_PATTERNS = (
-    r"\b(will|would)\b[^?]{0,50}\b(score|scored|pass|fail|grade)\b",
-    r"\bwhat\b[^?]{0,25}\b(score|grade|mark)s?\b[^?]{0,20}\b(will|would|did|do)\b",
-    r"\bwhat('s| is) (the |their |my )?(score|grade|mark)s?\b",
-    r"\bhow (well|badly)\b[^?]{0,40}\b(students?|they|class|cohort)\b",
-    r"\b(did|do|have)\b[^?]{0,20}\b(students?|they|class)\b[^?]{0,40}"
-    r"\b(badly|poorly|struggle|struggled)\b",
-    r"\bpass(ing)? rate\b",
-    r"\bfail(ing)? rate\b",
-    r"\b(how many|what percentage|what proportion)\b[^?]{0,40}"
-    r"\b(students?|candidates?)\b[^?]{0,40}\b(pass|fail|scored?)\b",
-    r"\b(grade|marks?|score) distribution\b",
-    r"\b(average|mean|median) (mark|score|grade)s?\b",
-    r"\bpredict\b[^?]{0,40}\b(score|outcome|performance|grade|result)\b",
-)
-
-
-def wants_cohort_prediction(question: str) -> bool:
-    q = question.lower()
-    return any(re.search(p, q) for p in COHORT_PATTERNS)
-
 
 def corpus_is_empty(path: Path) -> tuple[bool, str]:
     """True when there is nothing citable at `path`."""
@@ -79,34 +63,9 @@ def ev_read_head(p: Path) -> str:
 
 # --------------------------------------------------------------- retrieval
 
-STOP = set(
-    "a an the is are was were do does did to of in on for with and or what which how why "
-    "students student marks mark lose losing wrong mistake mistakes failure mode modes "
-    "about does give me tell show please their they them this that these those".split()
-)
-
-
-def score_entry(entry: dict, terms: set[str]) -> int:
-    hay = " ".join(
-        [
-            entry["title"],
-            entry["trigger"],
-            entry["wrong_turn"],
-            entry["root_misconception"],
-            " ".join(CONCEPTS[c]["label"] for c in entry["concepts"] if c in CONCEPTS),
-            entry.get("rule_id", ""),
-        ]
-    ).lower()
-    return sum(1 for t in terms if t in hay)
-
-
 def ask(question: str, entries: list[dict], k: int = 3) -> str:
     """Deterministic retrieval. No generation, so nothing can be invented."""
-    terms = {w for w in re.findall(r"[a-z]{3,}", question.lower()) if w not in STOP}
-    ranked = sorted(
-        ((score_entry(e, terms), e) for e in entries), key=lambda t: t[0], reverse=True
-    )
-    hits = [(s, e) for s, e in ranked if s > 0][:k]
+    hits = ranked_matches(question, entries, k)
     if not hits:
         return (
             "No failure mode in the atlas matches that question.\n"

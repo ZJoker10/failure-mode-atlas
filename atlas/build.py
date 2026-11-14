@@ -654,9 +654,13 @@ def write(entries: list[dict], cov: dict, out_dir: Path, docs: list[Document]) -
                 if m:
                     wanted.add((blk["doc"], int(m.group(1))))
     by_id = {d.doc_id: d for d in docs}
-    for doc_id, page_no in wanted:
+    # `wanted` is a set, so iterate it sorted and serialise with sort_keys: the
+    # same corpus must produce byte-identical output on every machine.
+    for doc_id, page_no in sorted(wanted):
         d = by_id.get(doc_id)
         if d and 1 <= page_no <= d.n_pages:
             pages.setdefault(doc_id, {})[str(page_no)] = d.pages[page_no - 1].text
-    (out_dir / "evidence_pages.json").write_text(json.dumps(pages, ensure_ascii=False))
+    (out_dir / "evidence_pages.json").write_text(
+        json.dumps(pages, ensure_ascii=False, sort_keys=True)
+    )
     return 0

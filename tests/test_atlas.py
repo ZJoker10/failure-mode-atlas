@@ -15,6 +15,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -330,9 +331,105 @@ class TestPublishedAtlas(unittest.TestCase):
     def test_published_entries_pass_structural_validation(self):
         self.assertEqual(ev.validate_structure(self.entries), [])
 
+
+    def test_evidence_pages_are_serialised_deterministically(self):
+        """`wanted` is a set; output must not depend on hash seed or run order."""
+        path = ROOT / "data" / "evidence_pages.json"
+        if not path.exists():
+            raise unittest.SkipTest("data/evidence_pages.json not built yet")
+        pages = json.loads(path.read_text())
+        self.assertEqual(list(pages), sorted(pages))
+        for doc_id, by_page in pages.items():
+            with self.subTest(doc=doc_id):
+                self.assertEqual(list(by_page), sorted(by_page))
+
     def test_published_entries_are_ranked_by_score(self):
         scores = [e["marks_at_risk"] * e["questions_affected"] for e in self.entries]
         self.assertEqual(scores, sorted(scores, reverse=True))
+
+
+class TestAnswerParity(unittest.TestCase):
+    """The CLI and the browser must run the same guard and the same retrieval."""
+
+    def test_ranked_matches_top_hit_matches_the_cli(self):
+        from atlas.answer import ranked_matches
+
+        entries = json.loads((ROOT / "data" / "atlas.json").read_text())
+        hits = ranked_matches("why do students get DH frame signs wrong", entries)
+        self.assertTrue(hits)
+        self.assertEqual(hits[0][1]["id"], "FM-DT-01-dh_frames")
+
+    def test_cohort_guard_matches_between_cli_and_answer_module(self):
+        from atlas import answer, cli
+
+        for q in (
+            "What will students score on question 3?",
+            "what is the pass rate",
+            "why do students get DH frame signs wrong",
+            "which failure modes affect trajectory planning",
+        ):
+            with self.subTest(q=q):
+                self.assertEqual(cli.wants_cohort_prediction(q),
+                                 answer.wants_cohort_prediction(q))
+
+    @staticmethod
+    def _guard_from_viewer() -> dict:
+        """Parse the inlined guard block, rather than grepping 166 KB of HTML.
+
+        The patterns contain backslashes that the page escapes differently from
+        `json.dumps`, so a substring check on the raw file compares escaping
+        rules instead of behaviour. Parsing the JSON block and comparing the
+        resulting strings tests what the browser actually compiles.
+        """
+        html = ROOT / "web" / "index.html"
+        if not html.exists():
+            raise unittest.SkipTest("web/index.html not built")
+        text = html.read_text()
+        start = text.index('id="d-guard"')
+        start = text.index(">", start) + 1
+        end = text.index("</script>", start)
+        return json.loads(text[start:end])
+
+    def test_js_patterns_are_the_python_patterns(self):
+        """The viewer inlines the guard; a pattern must not exist in one place only."""
+        from atlas.answer import COHORT_PATTERNS
+
+        guard = self._guard_from_viewer()
+        self.assertEqual(guard["patterns"], list(COHORT_PATTERNS))
+
+    def test_stop_list_is_inlined(self):
+        from atlas.answer import STOP
+
+        guard = self._guard_from_viewer()
+        self.assertEqual(set(guard["stop"]), STOP)
+
+    def test_refusal_reason_and_concept_labels_are_inlined(self):
+        from atlas.answer import NO_COHORT_REASON
+        from atlas.rules import CONCEPTS
+
+        guard = self._guard_from_viewer()
+        self.assertEqual(guard["reason"], NO_COHORT_REASON)
+        self.assertEqual(
+            guard["concept_labels"], {k: v["label"] for k, v in CONCEPTS.items()}
+        )
+
+    def test_guard_refuses_in_the_browser_too(self):
+        """Run the inlined patterns against questions the CLI refuses."""
+        from atlas.answer import COHORT_PATTERNS, wants_cohort_prediction
+
+        patterns = [re.compile(p) for p in COHORT_PATTERNS]
+        questions = (
+            "What will students score on question 3?",
+            "what is the pass rate",
+            "how well do students do on the exam",
+            "predict the exam outcome for this class",
+            "why do students get DH frame signs wrong",
+            "which failure modes affect trajectory planning",
+        )
+        for q in questions:
+            with self.subTest(q=q):
+                js = any(p.search(q.lower()) for p in patterns)
+                self.assertEqual(js, wants_cohort_prediction(q))
 
 
 if __name__ == "__main__":

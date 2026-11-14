@@ -40,9 +40,9 @@ python -m atlas.cli build
 # 2. ask it something
 python -m atlas.cli ask "Why do students get DH frame signs wrong?"
 
-# 3. human report + interactive viewer
+# 3. human report + viewer
 python -m atlas.report          # -> data/REPORT.md
-python -m atlas.view            # -> web/index.html  (open the file; no server needed)
+python -m atlas.view            # -> web/index.html
 
 # 4. reproduce the self-validation draw
 python -m atlas.cli spotcheck --sample 8 --seed 11
@@ -51,20 +51,54 @@ python -m atlas.cli spotcheck --sample 8 --seed 11
 python -m unittest discover -s tests -v
 ```
 
-Open `web/index.html` directly from disk. The data is inlined, so there is no fetch and no build step.
+### Opening the viewer
+
+Three ways, in order of convenience:
+
+```bash
+./demo.sh                       # http://localhost:8787/  (serves the repo, opens a browser)
+```
+
+```bash
+xdg-open web/index.html         # or: open web/index.html   (macOS)
+```
+
+or just **double-click `web/index.html`** in a file manager. The file is self-contained — data inlined, no fetch, no build step, works from `file://`. A copy of that one file is enough to show on another machine.
+
+**If it does not open, it is almost always one of these:**
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| You see HTML source text | You clicked `web/index.html` **on github.com**. GitHub serves repository files as text and never renders HTML. | Clone the repo and open the file locally, or run `./demo.sh` |
+| Nothing happens on double-click | No default application for `.html` | `xdg-open web/index.html`, or `./demo.sh` |
+| Blank page or unstyled text | The file was truncated while copying | Re-copy the whole 166 KB file, or `python -m atlas.view` to regenerate |
+| Page loads but links do nothing | You are looking at an old build | `python -m atlas.view` rewrites it |
+| Works locally, not over SSH | `file://` paths and `localhost` refer to the remote machine | Copy `web/index.html` to your machine and open that single file |
+
+The viewer is verified interactively, not just visually: in headless Chromium a scripted click on row 1 routes to `#/mode/…` and renders the detail screen, the evidence link opens `#/evidence/…` with the quote highlighted, and the coverage screen's grounding checker returns `NOT FOUND` when a word is added to a quote.
 
 The corpus itself is **not** committed (210 MB of third-party PDFs). `data/` contains everything needed to inspect the result, including the extracted text of every cited page — and `data/pages/` holds those **30 cited pages as one-page PDFs**, so any quote can be checked against the rendered page without the original download. See [`corpus/README.md`](corpus/README.md) to re-fetch the full set.
 
-### The four screens
+### The screens
 
 | Screen | Route | What it answers |
 |---|---|---|
 | Atlas index | `#/` | What are the modes, and in what order? |
 | Failure-mode detail | `#/mode/<id>` | What exactly goes wrong, and where is it proven? |
 | Evidence viewer | `#/evidence/<id>/exam` | Show me the quote on the page it claims to come from. |
+| **Ask** | `#/ask` | Ask a question and get the matching entries back — or a refusal. |
 | Coverage | `#/coverage` | What was read, what was refused, what is modelled? |
 
+The **Ask** screen is retrieval over the 27 validated entries, not generation. It is also where both refusals are visible without a terminal:
+
+- *"What will students score on question 3?"* → `NO_COHORT_DATA` card. The guard runs before retrieval, so the question never reaches the atlas.
+- *"What is the capital of Peru?"* → *"No match in the atlas"* rather than the nearest entry dressed up as an answer.
+
+The guard is not re-implemented in JavaScript. `atlas/answer.py` owns `COHORT_PATTERNS`, `NO_COHORT_REASON`, `STOP` and `ranked_matches`; the viewer inlines that data at build time and `tests/test_atlas.py::TestAnswerParity` asserts that the parsed JSON block in `web/index.html` equals the Python source. The CLI and the browser cannot drift apart without a test failing.
+
 The coverage screen includes a **"Try to break it"** panel: edit a quote in the browser and check it against the page. It runs the same containment test the build runs. Delete a word and it reports `NOT FOUND` — the build would have written `REJECTED.txt` instead of that entry.
+
+All four screens the brief asks for are present. **Ask** is the fifth, and it is the one to open first when demoing, because it makes the refusal behaviour visible in five seconds.
 
 ---
 
@@ -295,12 +329,12 @@ def test_regression_bare_get_is_not_a_score_request(self):
 
 | Time | Do | Say |
 |---|---|---|
-| 0:00 | Open `web/index.html` | "27 failure modes. Most are an instruction in a past paper that only makes sense if a specific error is anticipated; two are labelled reconstructed because the link is our inference, not the wording." |
+| 0:00 | `./demo.sh` → `http://localhost:8787/` | "27 failure modes. Most are an instruction in a past paper that only makes sense if a specific error is anticipated; two are labelled reconstructed because the link is our inference, not the wording." |
 | 0:40 | Click row 1 | "Score 232: 7.74 marks per affected exam, across 30 questions in 18 exams." |
 | 1:00 | Click *Open the page as PDF* | "This is the cited page, extracted from the original file, one page. The quote is on it. Check me." |
 | 1:40 | Coverage → *Try to break it*, delete words | "It says NOT FOUND. The build refuses to publish that entry rather than publish it weakly." |
-| 2:30 | Terminal: the cohort question | "Refused. There is no cohort data, and the code knows that before retrieval starts." |
-| 3:00 | Terminal: `--corpus /tmp/empty_course` | "Refused again — no citable document, no atlas." |
+| 2:30 | Ask → *"What will students score on question 3?"* | "Refused, in the browser, before retrieval. There is no cohort data, and the code knows that before it looks at a single entry." |
+| 3:00 | Terminal: `ask … --corpus /tmp/empty_course` | "Refused again — no citable document, no atlas. The empty-corpus path is a build-time one, so it stays in the terminal." |
 | 3:30 | Open `atlas/rules.py` | "Two entries are `reconstructed`, not `documented`. Here is the rule that made the inference. Attack the rule, not a hidden leap." |
 | 4:20 | `data/REPORT.md` §9 | "Eight random entries re-read by hand. Eight confirmed. One real defect was found and fixed before this draw — and the pre-fix number is still in the report." |
 
@@ -401,8 +435,9 @@ atlas/
   rules.py      17 design-tell rules + 11-concept taxonomy  (the intellectual content)
   evidence.py   structural + grounding validators, Refusal
   build.py      orchestration, marks model, ranking, the write gate
+  answer.py     the refusal guard + retrieval, shared by CLI and browser
   report.py     Markdown report, incl. self-validation table
-  view.py       4-screen self-contained viewer
+  view.py       5-screen self-contained viewer
   cli.py        build / ask / spotcheck
 data/
   atlas.json            27 validated entries
@@ -412,15 +447,17 @@ data/
   REPORT.md             human-readable report
   spotcheck_sample.json the reproducible draw
   spotcheck_verdicts.json  manual verdicts with notes
-web/index.html          generated viewer (open from disk)
-tests/test_atlas.py     37 tests, stdlib unittest
+web/index.html          generated viewer (open from disk, or `./demo.sh`)
+demo.sh                 serve the repo on localhost and open a browser
+index.html              redirect to web/index.html (only needed when served)
+tests/test_atlas.py     44 tests, stdlib unittest
 corpus/                 not committed; see corpus/README.md
 ```
 
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v     # 37 tests
+python -m unittest discover -s tests -v     # 44 tests
 ```
 
-They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, and a check that the published atlas is structurally valid and still in rank order.
+They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, parity between the CLI guard and the guard inlined in `web/index.html` (the JSON block is parsed, not grepped), and a check that the published atlas is structurally valid and still in rank order.
