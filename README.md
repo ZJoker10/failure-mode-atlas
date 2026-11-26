@@ -1,5 +1,7 @@
 # Failure-Mode Atlas
 
+[![CI](https://github.com/ZJoker10/failure-mode-atlas/actions/workflows/ci.yml/badge.svg)](https://github.com/ZJoker10/failure-mode-atlas/actions/workflows/ci.yml)
+
 **A ranked, evidence-linked map of what a university robotics course's exams are built to catch — and a pipeline that refuses to say anything the documents don't support.**
 
 Draft entry for **BESTech Student Tech Clash 2026**, case study *AI on Campus* (Direction 1: Teaching).
