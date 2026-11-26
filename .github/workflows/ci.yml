@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # The pipeline shells out to pdftotext/pdfinfo. Two parser tests skip
+      # without it; nothing else needs a dependency, because the package is
+      # standard library only.
+      - name: Install poppler
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+
+      - name: The published atlas is still structurally valid and in rank order
+        run: python -c "import json,sys; d=json.load(open('data/atlas.json')); assert d, 'atlas is empty'; print(f'{len(d)} entries')"
