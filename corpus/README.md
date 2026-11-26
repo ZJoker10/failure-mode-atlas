@@ -3,12 +3,15 @@
 This directory is **not committed**. It holds 190 PDFs (210 MB) of third-party course material. What is committed instead:
 
 * `data/atlas.json` — every claim, with `{doc, ref, quote}`.
-* `data/evidence_pages.json` — the extracted text of each cited page.
-* `data/pages/` — the **30 cited pages as one-page PDFs**, so every quote can be checked against the rendered page without this directory.
+* `data/evidence_pages.json` — empty in the published repo; the viewer falls back to document + page.
+
+The 30 one-page PDFs that used to sit in `data/pages/` were **removed before publication**. They
+made every quote checkable against the rendered page, but they were also a redistribution of the
+course's own files, which this project has no right to do. The citations remain; the copies do not.
 
 ## What was mirrored
 
-Course: **Robotics 1**, Sapienza University of Rome, Prof. Alessandro De Luca.
+Course: **Robotics 1**, Sapienza University of Rome.
 Course page recorded in the syllabus itself: `http://www.diag.uniroma1.it/deluca/rob1_en.php`.
 
 | Folder | Files | What it is |
@@ -42,7 +45,7 @@ If the corpus is a different vintage, the atlas will differ. That is expected an
 
 * 210 MB of someone else's teaching material, most of it still in use.
 * The repository is meant to be readable in a browser, not a mirror.
-* Redistribution adds nothing to verifiability: the 30 pages that carry claims are in `data/pages/`, and those are the only pages the atlas ever quotes.
+* Redistribution adds nothing to verifiability: the citation names the document and the page, and `_fetch_log.json` says where to get it.
 
 ## What was deliberately not used
 

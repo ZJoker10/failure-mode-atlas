@@ -1,4 +1,4 @@
-# Failure-Mode Atlas — Robotics 1 (Sapienza, Prof. A. De Luca)
+# Failure-Mode Atlas — Robotics 1 (Sapienza University of Rome)
 
 A reverse-engineered map of what this course's written exams are *designed to catch*, built only from the course's own exam papers and lecture slides.
 

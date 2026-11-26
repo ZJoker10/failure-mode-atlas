@@ -1,13 +1,12 @@
 # Failure-Mode Atlas
 
-**A ranked, evidence-linked map of what one professor's exams are built to catch — and a detector that refuses to say anything the documents don't support.**
+**A ranked, evidence-linked map of what a university robotics course's exams are built to catch — and a pipeline that refuses to say anything the documents don't support.**
 
-Built for Student Tech Clash 2026, case study *AI on Campus* (Direction 1: Teaching).
+Draft entry for **BESTech Student Tech Clash 2026**, case study *AI on Campus* (Direction 1: Teaching).
 
 **Team:** Zeyad Kandil · Maxime Kerger · Berk Ateşlap · Angelica Corbalán
 
-Course: **Robotics 1**, Sapienza University of Rome, Prof. Alessandro De Luca.
-Corpus source: `http://www.diag.uniroma1.it/deluca/rob1_en.php` (recorded in the course syllabus PDF itself, p. 1).
+The corpus is the publicly published lecture and exam material of **Robotics 1**, Sapienza University of Rome. **None of that material is redistributed in this repository** — see [Provenance](#provenance-and-what-this-repo-does-not-contain). What is here is the pipeline, the rule book, the validated atlas and the tests.
 
 ---
 
@@ -83,9 +82,9 @@ or just **double-click `web/index.html`** in a file manager. The file is self-co
 | Page loads but links do nothing | You are looking at an old build | `python -m atlas.view` rewrites it |
 | Works locally, not over SSH | `file://` paths and `localhost` refer to the remote machine | Copy `web/index.html` to your machine and open that single file |
 
-The viewer is verified interactively, not just visually: in headless Chromium a scripted click on row 1 routes to `#/mode/…` and renders the detail screen, the evidence link opens `#/evidence/…` with the quote highlighted, and the coverage screen's grounding checker returns `NOT FOUND` when a word is added to a quote.
+The viewer is verified interactively, not just visually: in headless Chromium a scripted click on row 1 routes to `#/mode/…` and renders the detail screen, and the evidence link opens `#/evidence/…` with the citation and the quoted span.
 
-The corpus itself is **not** committed (210 MB of third-party PDFs). `data/` contains everything needed to inspect the result, including the extracted text of every cited page — and `data/pages/` holds those **30 cited pages as one-page PDFs**, so any quote can be checked against the rendered page without the original download. See [`corpus/README.md`](corpus/README.md) to re-fetch the full set.
+The corpus itself is **not** committed (210 MB of third-party PDFs), and neither are copies of its pages. `data/atlas.json` carries the citation and the quoted span for every claim; `corpus/_fetch_log.json` records where each source document came from. See [`corpus/README.md`](corpus/README.md) to rebuild the corpus and re-run the grounding check.
 
 ### The screens
 
@@ -106,7 +105,7 @@ The **Ask** screen is retrieval over the 27 validated entries, not generation. I
 
 The guard is not re-implemented in JavaScript. `atlas/answer.py` owns `COHORT_PATTERNS`, `NO_COHORT_REASON`, `STOP` and `ranked_matches`; the viewer inlines that data at build time and `tests/test_atlas.py::TestAnswerParity` asserts that the parsed JSON block in `web/index.html` equals the Python source. The CLI and the browser cannot drift apart without a test failing.
 
-The coverage screen includes a **"Try to break it"** panel: edit a quote in the browser and check it against the page. It runs the same containment test the build runs. Delete a word and it reports `NOT FOUND` — the build would have written `REJECTED.txt` instead of that entry.
+The coverage screen reports the grounding outcome rather than offering a live checker: the test runs at build time, against the page text, and a failure writes `REJECTED.txt` instead of an entry. Because the source pages are not redistributed here, re-running it needs the corpus — `python -m atlas.cli build`, or `tests/test_atlas.py`, which feeds the writer a fabricated quote and asserts that nothing is published.
 
 All four screens the brief asks for are present. Two more sit around them: **Quiz**, which is the
 landing page because it is the cheapest way in, and **Ask**, which makes the refusal behaviour
@@ -270,7 +269,7 @@ graph TD
     subgraph OUTPUT["Output"]
         AJ["atlas.json<br/>27 validated entries"]
         CV["coverage.json<br/>what was read and excluded"]
-        PGS["data/pages/<br/>30 cited pages, as PDF"]
+        PROV["corpus/_fetch_log.json<br/>source manifest, no PDFs"]
         RP["REPORT.md"]
         WV["web/index.html<br/>4 screens"]
     end
@@ -291,7 +290,7 @@ graph TD
     G2 -- no --> D1 --> AJ
     AJ --> RP
     AJ --> WV
-    AJ --> PGS
+    PROV --> AJ
     CV --> WV
 
     subgraph STUDIO["Studio — the same discipline, your own material"]
@@ -312,7 +311,7 @@ graph TD
 
     class ING,SEG,TAX,RUL,PRS,AN,ED primary
     class Q0,G1,G2,GND,STR,MRK,XRF,RANK,D1,D2,R0 gateway
-    class AJ,CV,PGS,RP,WV,EX2 data
+    class AJ,CV,PROV,RP,WV,EX2 data
     class EX,SL,SY,UP external
 
     style INPUT fill:#080d1a,color:#00ffff,stroke:#00ffff
@@ -380,13 +379,13 @@ There are two validators because there are two distinct ways to be wrong:
 
 Matching is done on a whitespace-flattened, case-folded form of both quote and page, because PDF extraction inserts line breaks and soft hyphens a human reader never sees.
 
-### Verify a claim in thirty seconds, without the corpus
+### Verify a claim in thirty seconds
 
-1. Open any entry, click **Open the page as PDF** — that is the cited page extracted from the source file, one page, full fidelity.
-2. Read the quote from the entry against the page. It is there, verbatim, or the entry would not exist.
-3. Click **back to the mode** to see the inference built on top of it.
+1. The entry names the document and the page — `13_TrajectoryPlanning`, `p. 29` — and the exact string it quotes.
+2. `corpus/_fetch_log.json` records where that document came from, its HTTP status and its byte size.
+3. Fetch the document from the course page and search that page for the string. It is there verbatim, or the entry would not exist.
 
-`data/pages/` holds exactly the 30 pages the atlas cites, nothing else. The check does not depend on the text layer at all: the rendered page is the ground truth.
+That check needs the corpus, which this repository does not ship. [`corpus/README.md`](corpus/README.md) records how it is rebuilt. Removing the redistributed pages was deliberate: the source documents belong to the course, and the point of a citation is that it is checkable at the source rather than at a copy someone re-uploaded.
 
 ---
 
@@ -474,8 +473,8 @@ def test_regression_bare_get_is_not_a_score_request(self):
 | 0:35 | Answer with keys 1–3, then click a card | "The profile opens three entries. This one is DH frames, 3.16 of 30 marks per affected exam — and here is the sentence it rests on." |
 | 0:55 | *Open the atlas →* | "27 failure modes. Most are an instruction in a past paper that only makes sense if a specific error is anticipated; two are labelled reconstructed because the link is our inference, not the wording." |
 | 1:15 | Click row 1 | "Score 232: 7.74 marks per affected exam, across 30 questions in 18 exams." |
-| 1:00 | Click *Open the page as PDF* | "This is the cited page, extracted from the original file, one page. The quote is on it. Check me." |
-| 1:40 | Coverage → *Try to break it*, delete words | "It says NOT FOUND. The build refuses to publish that entry rather than publish it weakly." |
+| 1:40 | Open an evidence panel | "Document, page and the exact span. The source PDF is not shipped — the citation is, and `_fetch_log.json` records where to get it." |
+| 2:00 | Coverage → the rejection count | "Zero quotes rejected: the build refuses any claim it cannot ground, and `tests/test_atlas.py` proves it by feeding the writer a fabricated quote." |
 | 2:30 | Ask → *"What will students score on question 3?"* | "Refused, in the browser, before retrieval. There is no cohort data, and the code knows that before it looks at a single entry." |
 | 3:00 | Terminal: `ask … --corpus /tmp/empty_course` | "Refused again — no citable document, no atlas. The empty-corpus path is a build-time one, so it stays in the terminal." |
 | 3:30 | Open `atlas/rules.py` | "Two entries are `reconstructed`, not `documented`. Here is the rule that made the inference. Attack the rule, not a hidden leap." |
@@ -569,6 +568,29 @@ This split is an **assumption**. Its one documented anchor: 7 midterms state per
 
 ---
 
+## Provenance and what this repo does not contain
+
+The atlas is built from the **Robotics 1** lecture decks and past exam papers at Sapienza
+University of Rome. Those documents are published by the course for its own students. They are
+**third-party material and are not included here**, in any form:
+
+| Not in this repo | Why |
+|---|---|
+| The 190-PDF corpus (210 MB) | Third-party course material; `corpus/README.md` and `_fetch_log.json` record what it is and where it comes from |
+| One-page PDFs of the cited pages | Removed deliberately — re-uploading the source pages is redistribution, not citation |
+| Extracted page text | `data/evidence_pages.json` ships empty; the viewer falls back to document + page |
+| The trained models or weights | None were used; every inference is a named rule in `atlas/rules.py` |
+
+What remains is the part the team wrote: the pipeline, the 17-rule book, the 27 validated entries,
+the quiz and Studio, and 82 tests. Quotes are short spans (a clause or a sentence), attributed to a
+document and a page, and used to analyse how the papers are written.
+
+The code is the team's joint work. It carries **no open-source licence**: copyright is held by the
+four authors listed above, and a licence is theirs to grant, not mine to add. If you want to reuse
+it, ask them.
+
+---
+
 ## Repository layout
 
 ```
@@ -591,8 +613,7 @@ atlas/
 data/
   atlas.json            27 validated entries
   coverage.json         what was read, excluded, modelled
-  evidence_pages.json   extracted text of every cited page (viewer input)
-  pages/                30 one-page PDFs of the cited pages, so every quote is checkable
+  evidence_pages.json   empty in this repo; the viewer falls back to document + page
   REPORT.md             human-readable report
   spotcheck_sample.json the reproducible draw
   spotcheck_verdicts.json  manual verdicts with notes
@@ -609,7 +630,7 @@ corpus/                 not committed; see corpus/README.md
 ## Tests
 
 ```bash
-python -m unittest discover -s tests -v     # 81 tests
+python -m unittest discover -s tests -v     # 82 tests (2 skip without the corpus)
 ```
 
 They cover the parts that must not silently break: normalisation and quote spanning, grounding rejection of a fabricated quote, the write gate producing `REJECTED.txt` and no `atlas.json`, structural validation, page-anchor labels, segmenter heading variants and solution headers, the `DT-13` veto, the cohort-refusal regression, viewer placeholder replacement and `</script>` escaping, parity between the CLI guard and the guard inlined in `web/index.html` (the JSON block is parsed, not grepped), the quiz (payload parity, every answer set scoring in range, all four profiles reachable, recommendations resolving to real entries, and the shipped JavaScript scorer run under node against the Python one), and a check that the published atlas is structurally valid and still in rank order.

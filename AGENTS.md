@@ -58,7 +58,7 @@ Studio is the second mode, on the user's own files: `studio.py` (PDF/PPTX/DOCX â
 
 ## Files that are generated
 
-`data/atlas.json`, `data/coverage.json`, `data/evidence_pages.json`, `data/pages/`, `data/REPORT.md`, `web/index.html`, `data/spotcheck_sample.json`. Edit the generator, never the output. `data/spotcheck_verdicts.json` is the one hand-written artefact: it records manual verdicts and must cite the page it was checked against.
+`data/atlas.json`, `data/coverage.json`, `data/evidence_pages.json` (empty; corpus text is not redistributed), `data/REPORT.md`, `web/index.html`, `data/spotcheck_sample.json`. Edit the generator, never the output. `data/spotcheck_verdicts.json` is the one hand-written artefact: it records manual verdicts and must cite the page it was checked against.
 
 ## Style
 

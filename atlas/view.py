@@ -230,7 +230,7 @@ input.link{flex:1;min-width:240px;padding:10px 12px;border-radius:12px;
       <div class="mark">FM</div>
       <div>
         <h1>Failure-Mode Atlas</h1>
-        <p>Robotics 1 · Sapienza · Prof. A. De Luca</p>
+        <p>Robotics 1 · Sapienza University of Rome</p>
       </div>
     </div>
     <nav id="nav">
@@ -478,7 +478,9 @@ function screenEvidence(id, slot){
   const i = text.toLowerCase().indexOf(q.toLowerCase());
   let body;
   if (!text) {
-    body = `<div class="page"><span class="lead">No text layer was stored for this page.</span></div>`;
+    body = `<div class="page"><span class="lead">The source page is not redistributed here. The
+      citation and the quoted span below are what the build verified against it; fetch the document
+      from the course page to read it in place.</span></div>`;
   } else if (i < 0) {
     body = `<div class="page"><span class="lead">The quote could not be located in the stored
       text layer of this page. That is a bug, not a finding — the build would have refused it.</span></div>`;
@@ -496,21 +498,20 @@ function screenEvidence(id, slot){
     <div class="pglabel">
       <code style="font-size:12px;background:rgba(12,39,68,.07);padding:4px 9px;border-radius:8px">
         ${esc(blk.ref)}</code>
-      <span class="small">text layer of page ${esc(pageNo)}, whitespace collapsed</span>
+      <span class="small">cited as ${esc(blk.ref)} of the source document</span>
       <a class="btn ghost" style="margin-left:auto"
-         href="../data/pages/${encodeURIComponent(blk.doc)}_p${encodeURIComponent(pageNo)}.pdf"
-         target="_blank" rel="noopener">Open the page as PDF</a>
+         href="http://www.diag.uniroma1.it/deluca/rob1_en.php"
+         target="_blank" rel="noopener">Source course page</a>
       <a class="btn ghost" href="#/mode/${e.id}">← back to the mode</a>
     </div>
     ${body}
     <div class="cite" style="margin-top:14px">
       <b>Cited as:</b> “${esc(blk.quote)}”
     </div>
-    <div class="note">This is the extracted text of the page, not a screenshot. Line breaks are
-      collapsed so the quoted span can be shown as one run; nothing else is changed. The build
-      verified this exact string against this exact page, or the entry would not exist.
-      <b>Open the page as PDF</b> to check the quote against the rendered page, where the text
-      layer plays no part.</div>
+    <div class="note">The source documents are published by the course and are <b>not</b>
+      redistributed in this repository. The build verified this exact string against this exact
+      page before the entry was written, and <code>corpus/_fetch_log.json</code> records every
+      source file and its checksum so the corpus can be rebuilt from the course page.</div>
   </div>
   ${sharing.length > 1 ? `<div class="panel">
     <div class="eyebrow">Same instrument</div>
@@ -577,21 +578,13 @@ function screenCoverage(){
         dropped ${A.clauses_vetoed_by_rule_precision} clause(s) whose wording matched a pattern for the
         wrong reason.</p>
       <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(12,39,68,.12)">
-        <h3>Try to break it</h3>
-        <p class="small" style="margin-bottom:10px">Edit the quote below and check it against the page
-          it claims to come from. This is the same test the build runs before anything is written.</p>
-        <select id="gq-id" onchange="onQuoteTarget()"
-          style="font:inherit;font-size:12px;font-weight:600;padding:9px 12px;border-radius:12px;
-          border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.6);color:var(--ink);
-          max-width:100%;margin-bottom:8px">
-          ${ATLAS.map(x => `<option value="${x.id}">${esc(x.id)}</option>`).join('')}
-        </select>
-        <textarea id="gq-text" rows="4" spellcheck="false"
-          style="font:inherit;font-size:12.5px;line-height:1.5;width:100%;padding:12px 14px;
-          border-radius:16px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.62);
-          color:var(--ink);resize:vertical;margin-bottom:10px"></textarea>
-        <button class="btn" onclick="checkGrounding()">Check against the page</button>
-        <div id="gq-out" class="small" style="margin-top:10px;min-height:20px"></div>
+        <h3>Where the check actually runs</h3>
+        <p class="small" style="margin-bottom:0">Grounding is enforced at build time, not in this page:
+          every quote is tested for exact containment on the page it cites, and a failure writes
+          <code>REJECTED.txt</code> instead of an entry. The source pages are <b>not</b> redistributed
+          here, so the check needs the corpus — run <code>python -m atlas.cli build</code>, or
+          <code>tests/test_atlas.py</code>, which asserts that a fabricated quote is refused and that
+          no <code>atlas.json</code> is written.</p>
       </div>
     </div>
     <div class="panel">
@@ -977,34 +970,6 @@ function notFound(){
     <p>That id is not one of the ${ATLAS.length} entries. <a href="#/atlas">Back to the index</a>.</p></div>`;
 }
 
-/* Grounding, live: the same containment test the build runs, on text the visitor
-   can edit. Demonstrates that the guardrail is a check, not a promise. */
-function onQuoteTarget(){
-  const el = document.getElementById('gq-id');
-  const t  = document.getElementById('gq-text');
-  const o  = document.getElementById('gq-out');
-  if (!el || !t) return;
-  t.value = byId[el.value].evidence.exam.quote;
-  if (o) o.innerHTML = '';
-}
-function checkGrounding(){
-  const el = document.getElementById('gq-id');
-  const t  = document.getElementById('gq-text');
-  const o  = document.getElementById('gq-out');
-  if (!el || !t || !o) return;
-  const e = byId[el.value];
-  const blk = e.evidence.exam;
-  const pageNo = (blk.ref.match(/(\d+)\s*$/) || [])[1];
-  const page = flat((PAGES[blk.doc] || {})[pageNo] || '');
-  const typed = flat(t.value);
-  if (!typed){ o.innerHTML = '<span class="bad">Empty.</span>'; return; }
-  if (!page){ o.innerHTML = '<span class="bad">No text layer stored for that page.</span>'; return; }
-  o.innerHTML = page.toLowerCase().includes(typed.toLowerCase())
-    ? `<span class="good">FOUND</span> on <b>${esc(blk.doc)}</b>, ${esc(blk.ref)}. This string would be accepted.`
-    : `<span class="bad">NOT FOUND.</span> The build would refuse this quote — it writes
-       <span class="kbd">REJECTED.txt</span> and no atlas entry.`;
-}
-
 /* ------------------------------------------------------------------ router */
 function go(hash){ location.hash = hash; }
 function route(){
@@ -1033,7 +998,6 @@ function route(){
   else html = notFound();
   document.getElementById('app').innerHTML = html;
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.nav === nav));
-  if (nav === 'coverage') onQuoteTarget();
   if (nav === 'ask') { const a = document.getElementById('ask-q'); if (a) a.focus(); }
   window.scrollTo({top:0, behavior:'instant'});
   const q = document.getElementById('q');
@@ -1066,7 +1030,11 @@ route();
 def render(out_dir: Path = Path("data"), dest: Path = Path("web/index.html")) -> Path:
     out_dir = Path(out_dir)
     atlas = (out_dir / "atlas.json").read_text()
-    pages = (out_dir / "evidence_pages.json").read_text()
+    # The corpus is third-party course material and is not redistributed here.
+    # evidence_pages.json ships empty, so the viewer falls back to citing the
+    # document and page and pointing at the public course page for the source.
+    pages_path = out_dir / "evidence_pages.json"
+    pages = pages_path.read_text() if pages_path.is_file() else "{}"
     cov = (out_dir / "coverage.json").read_text()
 
     # The refusal guard and the retrieval stop list are inlined from Python so
